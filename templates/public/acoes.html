@@ -1,0 +1,253 @@
+{% extends 'public/base_publica.html' %}
+
+{% block title %}Nossas Ações — {{ INST_NOME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-hero {
+        padding: 100px 5% 60px;
+        background: var(--verde-escuro);
+        color: white;
+        text-align: center;
+    }
+
+    .page-hero .tag-verde {
+        background: rgba(116,198,157,0.15);
+        border-color: rgba(116,198,157,0.3);
+        color: var(--verde-claro);
+        margin-bottom: 20px;
+    }
+
+    .page-hero h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(2.2rem, 4vw, 3.5rem);
+        font-weight: 900;
+        line-height: 1.15;
+        margin-bottom: 16px;
+    }
+
+    .page-hero p {
+        font-size: 1.1rem;
+        color: rgba(255,255,255,0.65);
+        max-width: 560px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+
+    /* PRÓXIMOS */
+    .secao-proximos-pub {
+        padding: 80px 5%;
+        background: white;
+        border-bottom: 1px solid var(--borda);
+    }
+
+    .secao-sub-titulo {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--verde-escuro);
+        margin-bottom: 32px;
+    }
+
+    .proximos-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+    .proximo-card {
+        border: 2px solid var(--verde-claro);
+        border-radius: 16px;
+        padding: 24px;
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        transition: all 0.3s;
+        background: rgba(116,198,157,0.04);
+    }
+
+    .proximo-card:hover { background: rgba(116,198,157,0.1); transform: translateY(-3px); }
+
+    .pc-data {
+        text-align: center;
+        min-width: 52px;
+        background: var(--verde-escuro);
+        border-radius: 10px;
+        padding: 10px 8px;
+    }
+
+    .pc-data .dia { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--verde-claro); line-height: 1; }
+    .pc-data .mes { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+    .pc-info h4 { font-weight: 700; font-size: 1rem; color: var(--verde-escuro); margin-bottom: 6px; }
+    .pc-info p { font-size: 0.82rem; color: var(--texto-suave); line-height: 1.5; }
+    .pc-info .vagas { display: inline-block; margin-top: 10px; font-size: 0.78rem; font-weight: 600; color: var(--verde-medio); background: rgba(64,145,108,0.1); padding: 3px 10px; border-radius: 100px; }
+
+    /* REALIZADOS */
+    .secao-realizados { padding: 80px 5%; background: var(--areia); }
+
+    .acoes-lista { display: flex; flex-direction: column; gap: 20px; }
+
+    .acao-linha {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid var(--borda);
+        display: grid;
+        grid-template-columns: 140px 1fr auto;
+        gap: 0;
+        overflow: hidden;
+        transition: all 0.3s;
+    }
+
+    .acao-linha:hover {
+        box-shadow: 0 8px 32px rgba(26,61,43,0.08);
+        border-color: var(--verde-claro);
+    }
+
+    .acao-linha-data {
+        background: var(--verde-escuro);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 28px 16px;
+        text-align: center;
+    }
+
+    .acao-linha-data .dia-grande {
+        font-family: 'Playfair Display', serif;
+        font-size: 3rem;
+        font-weight: 900;
+        color: var(--verde-claro);
+        line-height: 1;
+    }
+
+    .acao-linha-data .mes-ano {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: rgba(255,255,255,0.5);
+        margin-top: 4px;
+    }
+
+    .acao-linha-corpo { padding: 28px 32px; }
+    .acao-linha-corpo h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: var(--verde-escuro); margin-bottom: 8px; }
+    .acao-linha-corpo .local { font-size: 0.85rem; color: var(--texto-suave); margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+    .acao-linha-corpo .desc { font-size: 0.88rem; color: var(--texto-suave); line-height: 1.6; }
+
+    .acao-linha-impacto {
+        padding: 28px 28px 28px 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 16px;
+        min-width: 160px;
+    }
+
+    .impacto-item { text-align: center; }
+
+    .impacto-item .iv {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--verde-escuro);
+        line-height: 1;
+    }
+
+    .impacto-item .il { font-size: 0.72rem; color: var(--texto-suave); }
+
+    .sem-dados { text-align: center; padding: 80px 20px; color: var(--texto-suave); }
+    .sem-dados .emoji { font-size: 3rem; margin-bottom: 16px; }
+
+    @media (max-width: 768px) {
+        .acao-linha { grid-template-columns: 80px 1fr; }
+        .acao-linha-impacto { display: none; }
+        .acao-linha-data .dia-grande { font-size: 2rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-hero">
+    <span class="tag-verde">Histórico Completo</span>
+    <h1>Nossas Ações</h1>
+    <p>Cada mutirão é uma conquista coletiva. Aqui você acompanha tudo que já fizemos e o que está por vir.</p>
+</div>
+
+<!-- PRÓXIMOS -->
+{% if proximos %}
+<section class="secao-proximos-pub">
+    <span class="tag-verde" style="margin-bottom:14px">Em breve</span>
+    <h2 class="secao-sub-titulo">Próximos Mutirões</h2>
+    <div class="proximos-cards">
+        {% for evento in proximos %}
+        <div class="proximo-card">
+            <div class="pc-data">
+                <div class="dia">{{ evento.data|date:"d" }}</div>
+                <div class="mes">{{ evento.data|date:"M/Y" }}</div>
+            </div>
+            <div class="pc-info">
+                <h4>{{ evento.titulo }}</h4>
+                <p><i class="bi bi-geo-alt"></i> {{ evento.bairro }} — {{ evento.local|truncatechars:50 }}</p>
+                <p><i class="bi bi-clock"></i> {{ evento.horario|default:"Horário a confirmar" }}</p>
+                <span class="vagas"><i class="bi bi-people"></i> {{ evento.vagas_disponiveis }} vagas disponíveis</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div style="margin-top:32px; text-align:center">
+        <a href="{% url 'users:login' %}" class="btn-primario">
+            <i class="bi bi-person-check"></i> Inscrever-se em um mutirão
+        </a>
+    </div>
+</section>
+{% endif %}
+
+<!-- REALIZADOS -->
+<section class="secao-realizados">
+    <span class="tag-verde" style="margin-bottom:14px">Histórico</span>
+    <h2 class="secao-sub-titulo" style="margin-bottom:32px">Ações Realizadas</h2>
+
+    {% if acoes_realizadas %}
+    <div class="acoes-lista">
+        {% for acao in acoes_realizadas %}
+        <div class="acao-linha">
+            <div class="acao-linha-data">
+                <div class="dia-grande">{{ acao.data|date:"d" }}</div>
+                <div class="mes-ano">{{ acao.data|date:"M Y" }}</div>
+            </div>
+            <div class="acao-linha-corpo">
+                <h3>{{ acao.titulo }}</h3>
+                <div class="local">
+                    <i class="bi bi-geo-alt-fill" style="color:var(--verde-vivo)"></i>
+                    {{ acao.bairro }} · {{ acao.local }}
+                </div>
+                <div class="desc">{{ acao.descricao|truncatechars:180 }}</div>
+            </div>
+            {% if acao.impact_report %}
+            <div class="acao-linha-impacto">
+                <div class="impacto-item">
+                    <div class="iv">{{ acao.impact_report.lixo_kg|floatformat:0 }}</div>
+                    <div class="il">kg de lixo</div>
+                </div>
+                <div class="impacto-item">
+                    <div class="iv">{{ acao.impact_report.numero_participantes }}</div>
+                    <div class="il">voluntários</div>
+                </div>
+                <div class="impacto-item">
+                    <div class="iv">{{ acao.impact_report.sacos_coletados }}</div>
+                    <div class="il">sacos</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="sem-dados">
+        <div class="emoji">📋</div>
+        <h4>Nenhuma ação registrada ainda</h4>
+        <p>As ações serão exibidas aqui conforme forem realizadas.</p>
+    </div>
+    {% endif %}
+</section>
+
+{% endblock %}

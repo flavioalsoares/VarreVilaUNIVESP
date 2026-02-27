@@ -1,0 +1,242 @@
+{% extends 'public/base_publica.html' %}
+
+{% block title %}O Projeto — {{ INST_NOME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-sobre {
+        padding: 100px 5% 80px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 80px;
+        align-items: center;
+        background: white;
+        border-bottom: 1px solid var(--borda);
+    }
+
+    .hero-sobre .secao-titulo { font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 900; color: var(--verde-escuro); line-height: 1.15; margin: 16px 0 24px; }
+
+    .hero-sobre p { font-size: 1.05rem; line-height: 1.8; color: var(--texto-suave); margin-bottom: 16px; }
+
+    .sobre-visual {
+        background: var(--verde-escuro);
+        border-radius: 24px;
+        padding: 48px;
+        color: white;
+    }
+
+    .sobre-visual h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--verde-claro); margin-bottom: 28px; }
+
+    .timeline { display: flex; flex-direction: column; gap: 0; }
+
+    .tl-item { display: grid; grid-template-columns: 60px 1fr; gap: 20px; padding-bottom: 28px; position: relative; }
+
+    .tl-item:not(:last-child)::before { content: ''; position: absolute; left: 29px; top: 40px; bottom: 0; width: 2px; background: rgba(116,198,157,0.25); }
+
+    .tl-ano {
+        font-family: 'Playfair Display', serif;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--verde-claro);
+        padding-top: 2px;
+        text-align: center;
+    }
+
+    .tl-dot { width: 10px; height: 10px; background: var(--verde-claro); border-radius: 50%; margin: 6px auto 0; }
+
+    .tl-conteudo h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+
+    .tl-conteudo p { font-size: 0.82rem; color: rgba(255,255,255,0.55); line-height: 1.5; }
+
+    /* Pilares */
+    .secao-pilares { padding: 100px 5%; background: var(--areia); }
+    .secao-pilares .secao-titulo { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 700; color: var(--verde-escuro); text-align: center; margin-bottom: 60px; }
+
+    .pilares-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+    .pilar-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px 32px;
+        border: 1px solid var(--borda);
+        transition: all 0.3s;
+    }
+
+    .pilar-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(26,61,43,0.08); border-color: var(--verde-claro); }
+
+    .pilar-icone { font-size: 2.8rem; margin-bottom: 20px; }
+
+    .pilar-card h3 { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--verde-escuro); margin-bottom: 12px; }
+
+    .pilar-card p { font-size: 0.9rem; color: var(--texto-suave); line-height: 1.7; }
+
+    /* Reconhecimentos */
+    .secao-reconhecimentos { padding: 80px 5%; background: white; border-top: 1px solid var(--borda); }
+
+    .reconh-titulo { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--verde-escuro); text-align: center; margin-bottom: 48px; }
+
+    .reconh-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+    .reconh-item {
+        border: 1px solid var(--borda);
+        border-radius: 16px;
+        padding: 28px 24px;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .reconh-item:hover { border-color: var(--verde-claro); background: var(--areia); }
+
+    .reconh-item .org { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--verde-vivo); font-weight: 600; margin-bottom: 8px; }
+
+    .reconh-item h4 { font-size: 0.95rem; font-weight: 600; color: var(--texto); line-height: 1.4; margin-bottom: 8px; }
+
+    .reconh-item a { font-size: 0.8rem; color: var(--verde-medio); text-decoration: none; }
+    .reconh-item a:hover { text-decoration: underline; }
+
+    @media (max-width: 900px) {
+        .hero-sobre { grid-template-columns: 1fr; }
+        .pilares-grid, .reconh-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="hero-sobre">
+    <div>
+        <span class="tag-verde">Sobre o Projeto</span>
+        <h1 class="secao-titulo">Uma iniciativa que nasceu das ruas</h1>
+        <p>
+            O <strong>{{ INST_NOME }}</strong> é um projeto social de mobilização popular voltado à limpeza urbana e à educação ambiental em comunidades periféricas de São Paulo. Surgiu da percepção de que a limpeza e a dignidade dos espaços públicos não deveriam ser responsabilidade exclusiva do poder público — mas de cada morador.
+        </p>
+        <p>
+            Nasceu em <strong>Ermelino Matarazzo</strong>, na zona leste de São Paulo, e cresceu organicamente, reunindo moradores, estudantes e organizações em torno de um propósito comum: transformar o ambiente urbano pela ação coletiva.
+        </p>
+        <p>
+            Hoje o projeto é referência em mobilização comunitária e foi reconhecido por instituições como a <strong>Fiocruz</strong>, a <strong>Prefeitura de São Paulo</strong> e o <strong>SESC SP</strong>.
+        </p>
+        <div style="margin-top:32px">
+            <a href="{% url 'public:contato' %}" class="btn-primario">
+                <i class="bi bi-heart"></i> Participar do Projeto
+            </a>
+        </div>
+    </div>
+
+    <div class="sobre-visual">
+        <h3>📅 Nossa trajetória</h3>
+        <div class="timeline">
+            <div class="tl-item">
+                <div>
+                    <div class="tl-ano">2018</div>
+                    <div class="tl-dot"></div>
+                </div>
+                <div class="tl-conteudo">
+                    <h4>Primeiro mutirão</h4>
+                    <p>Nascimento do projeto em Ermelino Matarazzo com moradores locais.</p>
+                </div>
+            </div>
+            <div class="tl-item">
+                <div>
+                    <div class="tl-ano">2019</div>
+                    <div class="tl-dot"></div>
+                </div>
+                <div class="tl-conteudo">
+                    <h4>Expansão para novos bairros</h4>
+                    <p>O projeto chega a Guaianases, Itaim Paulista e outras comunidades.</p>
+                </div>
+            </div>
+            <div class="tl-item">
+                <div>
+                    <div class="tl-ano">2021</div>
+                    <div class="tl-dot"></div>
+                </div>
+                <div class="tl-conteudo">
+                    <h4>Reconhecimento Fiocruz</h4>
+                    <p>Projeto selecionado pela Fiocruz como prática inovadora em saúde coletiva.</p>
+                </div>
+            </div>
+            <div class="tl-item">
+                <div>
+                    <div class="tl-ano">2023</div>
+                    <div class="tl-dot"></div>
+                </div>
+                <div class="tl-conteudo">
+                    <h4>Parceria SESC SP</h4>
+                    <p>Realização de ações em parceria com o SESC São Paulo.</p>
+                </div>
+            </div>
+            <div class="tl-item">
+                <div>
+                    <div class="tl-ano">2025</div>
+                    <div class="tl-dot"></div>
+                </div>
+                <div class="tl-conteudo">
+                    <h4>Plataforma digital</h4>
+                    <p>Lançamento deste sistema de gestão comunitária.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PILARES -->
+<section class="secao-pilares">
+    <h2 class="secao-titulo">Como atuamos</h2>
+    <div class="pilares-grid">
+        <div class="pilar-card">
+            <div class="pilar-icone">🧹</div>
+            <h3>Mutirões de Limpeza</h3>
+            <p>Organizamos ações coletivas de limpeza em ruas, praças, córregos e espaços públicos. Cada mutirão envolve moradores de todas as idades e registra o impacto gerado em kg de lixo recolhido.</p>
+        </div>
+        <div class="pilar-card">
+            <div class="pilar-icone">📚</div>
+            <h3>Educação Ambiental</h3>
+            <p>Promovemos ações educativas em escolas, associações de moradores e espaços públicos sobre descarte correto, reciclagem, e a importância de manter o ambiente limpo e saudável.</p>
+        </div>
+        <div class="pilar-card">
+            <div class="pilar-icone">🤝</div>
+            <h3>Mobilização Comunitária</h3>
+            <p>Articulamos moradores, lideranças locais, organizações e o poder público para que a transformação do espaço urbano seja um esforço coletivo e sustentável a longo prazo.</p>
+        </div>
+    </div>
+</section>
+
+<!-- RECONHECIMENTOS -->
+<section class="secao-reconhecimentos">
+    <h2 class="reconh-titulo">Reconhecimentos e Parcerias</h2>
+    <div class="reconh-grid">
+        <div class="reconh-item">
+            <div class="org">Fiocruz</div>
+            <h4>Prática Inovadora em Saúde Coletiva</h4>
+            <a href="https://ideiasus.fiocruz.br/praticas/projeto-varre-vila/" target="_blank">Ver reconhecimento →</a>
+        </div>
+        <div class="reconh-item">
+            <div class="org">SESC SP</div>
+            <h4>Parceria em Ações Comunitárias</h4>
+            <a href="https://www.sescsp.org.br/varre-vila-da-comunidade-santa-ines-em-ermelino-matarazzo/" target="_blank">Ver publicação →</a>
+        </div>
+        <div class="reconh-item">
+            <div class="org">Nossas São Paulo</div>
+            <h4>Iniciativa Popular de Limpeza Urbana</h4>
+            <a href="https://passandoalimpo.nossasaopaulo.org.br/noticia/conheca_o_varre_vila_iniciativa_popular_de_limpeza_urbana_em_sao_paulo" target="_blank">Ver reportagem →</a>
+        </div>
+        <div class="reconh-item">
+            <div class="org">Prefeitura de São Paulo</div>
+            <h4>Apresentação no Conselho CADES</h4>
+            <a href="https://prefeitura.sp.gov.br/web/casa_verde/w/idealizador-do-varre-vila-fala-sobre-sua-experi%C3%AAncia-aos-conselheiros-do-cades" target="_blank">Ver publicação →</a>
+        </div>
+        <div class="reconh-item">
+            <div class="org">USP</div>
+            <h4>Visita e estudo pelo programa ComunicaSaúde Remo</h4>
+            <a href="https://sites.usp.br/comunicasaoremo/projetos/visita-ao-varre-vila/" target="_blank">Ver publicação →</a>
+        </div>
+        <div class="reconh-item">
+            <div class="org">UNIVESP</div>
+            <h4>Projeto Integrador de Engenharia da Computação</h4>
+            <a href="https://www.univesp.br" target="_blank">UNIVESP →</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ INST_NOME }} — {{ INST_SLOGAN }}{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --verde-escuro: #1a3d2b;
+            --verde-medio: #2d6a4f;
+            --verde-vivo: #40916c;
+            --verde-claro: #74c69d;
+            --amarelo: #f9c74f;
+            --areia: #fdf8f0;
+            --texto: #1c1c1c;
+            --texto-suave: #5a5a5a;
+            --borda: #e0d8cc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--areia);
+            color: var(--texto);
+            overflow-x: hidden;
+        }
+
+        /* ── NAVBAR ── */
+        .navbar-publica {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            padding: 18px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(253, 248, 240, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--borda);
+            transition: all 0.3s ease;
+        }
+
+        .navbar-publica.scrolled {
+            padding: 12px 5%;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--verde-escuro);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .logo-texto {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--verde-escuro);
+            line-height: 1;
+        }
+
+        .logo-subtexto {
+            font-size: 0.65rem;
+            color: var(--texto-suave);
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--texto);
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 100px;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            background: rgba(45, 106, 79, 0.1);
+            color: var(--verde-medio);
+        }
+
+        .nav-links a.ativo {
+            color: var(--verde-escuro);
+            font-weight: 600;
+        }
+
+        .btn-sistema {
+            background: var(--verde-escuro) !important;
+            color: white !important;
+            padding: 9px 20px !important;
+            border-radius: 100px !important;
+            font-weight: 600 !important;
+            font-size: 0.85rem !important;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-sistema:hover {
+            background: var(--verde-medio) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(26,61,43,0.3);
+        }
+
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--verde-escuro);
+        }
+
+        /* ── CONTEÚDO PRINCIPAL ── */
+        main { padding-top: 80px; }
+
+        /* ── FOOTER ── */
+        footer {
+            background: var(--verde-escuro);
+            color: rgba(255,255,255,0.85);
+            padding: 60px 5% 30px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+
+        .footer-brand .logo-texto { color: white; }
+        .footer-brand .logo-subtexto { color: rgba(255,255,255,0.5); }
+        .footer-brand p {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: rgba(255,255,255,0.65);
+        }
+
+        .footer-col h4 {
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--verde-claro);
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .footer-col ul { list-style: none; }
+        .footer-col ul li { margin-bottom: 10px; }
+        .footer-col ul li a {
+            color: rgba(255,255,255,0.65);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .footer-col ul li a:hover { color: white; }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .footer-bottom a {
+            color: var(--verde-claro);
+            text-decoration: none;
+        }
+
+        /* ── UTILITÁRIOS ── */
+        .tag-verde {
+            display: inline-block;
+            background: rgba(64, 145, 108, 0.12);
+            color: var(--verde-medio);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 100px;
+            border: 1px solid rgba(64, 145, 108, 0.25);
+        }
+
+        .btn-primario {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--verde-escuro);
+            color: white;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.25s;
+            border: 2px solid var(--verde-escuro);
+        }
+
+        .btn-primario:hover {
+            background: var(--verde-medio);
+            border-color: var(--verde-medio);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(26,61,43,0.25);
+        }
+
+        .btn-secundario {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            color: var(--verde-escuro);
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.25s;
+            border: 2px solid var(--verde-escuro);
+        }
+
+        .btn-secundario:hover {
+            background: var(--verde-escuro);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--areia); border-bottom: 1px solid var(--borda); padding: 16px; }
+            .nav-links.aberto { display: flex; }
+            .hamburger { display: block; }
+            .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+            .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar-publica" id="navbar">
+    <a href="{% url 'public:home' %}" class="logo">
+        <div class="logo-icon">🧹</div>
+        <div>
+            <div class="logo-texto">{{ INST_NOME }}</div>
+            <div class="logo-subtexto">{{ INST_SUBTITULO }}</div>
+        </div>
+    </a>
+
+    <ul class="nav-links" id="navLinks">
+        <li><a href="{% url 'public:home' %}" class="{% if request.resolver_match.url_name == 'home' %}ativo{% endif %}">Início</a></li>
+        <li><a href="{% url 'public:sobre' %}" class="{% if request.resolver_match.url_name == 'sobre' %}ativo{% endif %}">O Projeto</a></li>
+        <li><a href="{% url 'public:acoes' %}" class="{% if request.resolver_match.url_name == 'acoes' %}ativo{% endif %}">Ações</a></li>
+        <li><a href="{% url 'public:contato' %}" class="{% if request.resolver_match.url_name == 'contato' %}ativo{% endif %}">Participe</a></li>
+        <li>
+            <a href="{% url 'users:login' %}" class="btn-sistema">
+                <i class="bi bi-grid-3x3-gap"></i> Área da Equipe
+            </a>
+        </li>
+    </ul>
+
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+        <i class="bi bi-list"></i>
+    </button>
+</nav>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<footer>
+    <div class="footer-grid">
+        <div class="footer-brand">
+            <a href="{% url 'public:home' %}" class="logo">
+                <div class="logo-icon">🧹</div>
+                <div>
+                    <div class="logo-texto">{{ INST_NOME }}</div>
+                    <div class="logo-subtexto">{{ INST_SUBTITULO }}</div>
+                </div>
+            </a>
+            <p>Iniciativa popular de mobilização comunitária para limpeza urbana e educação ambiental em bairros periféricos de São Paulo.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Navegação</h4>
+            <ul>
+                <li><a href="{% url 'public:home' %}">Início</a></li>
+                <li><a href="{% url 'public:sobre' %}">O Projeto</a></li>
+                <li><a href="{% url 'public:acoes' %}">Nossas Ações</a></li>
+                <li><a href="{% url 'public:contato' %}">Como Participar</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Saiba mais</h4>
+            <ul>
+                <li><a href="{{ INST_FACEBOOK }}" target="_blank">Facebook</a></li>
+                <li><a href="https://passandoalimpo.nossasaopaulo.org.br/noticia/conheca_o_varre_vila_iniciativa_popular_de_limpeza_urbana_em_sao_paulo" target="_blank">Nossas São Paulo</a></li>
+                <li><a href="https://ideiasus.fiocruz.br/praticas/projeto-varre-vila/" target="_blank">IdeiasSUS / Fiocruz</a></li>
+                <li><a href="{% url 'users:login' %}">Área da Equipe</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>© 2025 {{ INST_NOME }} — Todos os direitos reservados</span>
+        <span>Projeto Integrador · <a href="https://www.univesp.br" target="_blank">UNIVESP</a></span>
+    </div>
+</footer>
+
+<script>
+    // Navbar scroll
+    window.addEventListener('scroll', () => {
+        document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // Mobile menu
+    function toggleMenu() {
+        const links = document.getElementById('navLinks');
+        const icon = document.querySelector('.hamburger i');
+        links.classList.toggle('aberto');
+        icon.className = links.classList.contains('aberto') ? 'bi bi-x' : 'bi bi-list';
+    }
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

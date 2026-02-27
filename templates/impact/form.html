@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ titulo }} – {{ INST_NOME }}{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'events:detalhe' evento.pk %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Voltar ao Evento
+    </a>
+</div>
+
+<div class="page-header">
+    <h2><i class="bi bi-bar-chart"></i> {{ titulo }}</h2>
+    <p class="mb-0 opacity-75">Evento: {{ evento.titulo }} — {{ evento.data|date:"d/m/Y" }}</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card p-4">
+            {% crispy form %}
+        </div>
+    </div>
+</div>
+{% endblock %}

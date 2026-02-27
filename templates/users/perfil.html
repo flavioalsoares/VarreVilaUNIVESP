@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Meu Perfil – {{ INST_NOME }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-person-circle"></i> Meu Perfil</h2>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card p-4 text-center">
+            <div style="font-size:4rem">👤</div>
+            <h4 class="fw-bold">{{ user.get_full_name|default:user.username }}</h4>
+            <span class="badge bg-success">{{ user.get_perfil_display }}</span>
+            <hr>
+            <div class="text-start small">
+                <p><i class="bi bi-envelope"></i> {{ user.email|default:"—" }}</p>
+                <p><i class="bi bi-telephone"></i> {{ user.telefone|default:"—" }}</p>
+                <p><i class="bi bi-geo-alt"></i> {{ user.bairro|default:"—" }}</p>
+                <p><i class="bi bi-calendar"></i> Desde {{ user.date_joined|date:"d/m/Y" }}</p>
+            </div>
+            <div class="mt-2">
+                <span class="badge bg-success fs-6">{{ participacoes.count }} participações</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card p-3">
+            <h5><i class="bi bi-calendar-check text-success"></i> Histórico de Mutirões</h5>
+            {% if participacoes %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Evento</th>
+                            <th>Data</th>
+                            <th>Bairro</th>
+                            <th>Presença</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in participacoes %}
+                        <tr>
+                            <td><a href="{% url 'events:detalhe' p.event.pk %}" class="text-success">{{ p.event.titulo }}</a></td>
+                            <td>{{ p.event.data|date:"d/m/Y" }}</td>
+                            <td>{{ p.event.bairro }}</td>
+                            <td>
+                                {% if p.presenca_confirmada %}
+                                    <span class="badge bg-success"><i class="bi bi-check"></i> Confirmada</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Pendente</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">Você ainda não participou de nenhum mutirão.
+                <a href="{% url 'events:lista' %}">Inscreva-se agora!</a>
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

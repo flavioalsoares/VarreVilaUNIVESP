@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard – {{ INST_NOME }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-speedometer2"></i> Dashboard de Impacto</h2>
+    <p class="mb-0 opacity-75">Visão geral das ações do {{ INST_NOME }}</p>
+</div>
+
+<!-- Cards de indicadores -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3 text-center">
+            <div style="font-size:2.5rem">🧹</div>
+            <h2 class="fw-bold">{{ total_mutiroes }}</h2>
+            <div>Mutirões Realizados</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3 text-center">
+            <div style="font-size:2.5rem">👥</div>
+            <h2 class="fw-bold">{{ total_voluntarios }}</h2>
+            <div>Voluntários Cadastrados</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3 text-center">
+            <div style="font-size:2.5rem">🗺️</div>
+            <h2 class="fw-bold">{{ total_bairros }}</h2>
+            <div>Bairros Atendidos</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3 text-center">
+            <div style="font-size:2.5rem">♻️</div>
+            <h2 class="fw-bold">{{ total_lixo|floatformat:0 }} kg</h2>
+            <div>Lixo Coletado</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Gráfico mensal -->
+    <div class="col-lg-7">
+        <div class="card p-3 h-100">
+            <h5 class="mb-3"><i class="bi bi-bar-chart-fill text-success"></i> Lixo Coletado por Mês (kg)</h5>
+            <canvas id="graficoMensal" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Próximos eventos -->
+    <div class="col-lg-5">
+        <div class="card p-3 h-100">
+            <h5 class="mb-3"><i class="bi bi-calendar-check text-success"></i> Próximos Mutirões</h5>
+            {% if proximos %}
+                {% for evento in proximos %}
+                <a href="{% url 'events:detalhe' evento.pk %}" class="text-decoration-none">
+                    <div class="d-flex align-items-center mb-2 p-2 rounded" style="background:#f8f9fa">
+                        <div class="me-3 text-center" style="min-width:45px">
+                            <div class="fw-bold text-success" style="font-size:1.3rem">{{ evento.data|date:"d" }}</div>
+                            <div class="text-muted small">{{ evento.data|date:"M" }}</div>
+                        </div>
+                        <div>
+                            <div class="fw-semibold text-dark">{{ evento.titulo }}</div>
+                            <div class="text-muted small"><i class="bi bi-geo-alt"></i> {{ evento.bairro }}</div>
+                            <div class="text-muted small"><i class="bi bi-people"></i> {{ evento.vagas_disponiveis }} vagas</div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+                <a href="{% url 'events:lista' %}" class="btn btn-outline-success btn-sm w-100 mt-2">
+                    Ver todos <i class="bi bi-arrow-right"></i>
+                </a>
+            {% else %}
+                <p class="text-muted">Nenhum mutirão planejado no momento.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Mapa -->
+<div class="card p-3">
+    <h5 class="mb-3"><i class="bi bi-map text-success"></i> Mapa de Ações</h5>
+    <div id="map"></div>
+    <div class="mt-2 d-flex gap-3">
+        <span><span class="badge" style="background:#0d6efd">●</span> Planejado</span>
+        <span><span class="badge bg-success">●</span> Realizado</span>
+        <span><span class="badge bg-danger">●</span> Cancelado</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Gráfico
+const ctx = document.getElementById('graficoMensal').getContext('2d');
+const labels = {{ labels|safe }};
+const dados = {{ dados_lixo|safe }};
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: labels.length ? labels : ['Sem dados'],
+        datasets: [{
+            label: 'Lixo coletado (kg)',
+            data: dados.length ? dados : [0],
+            backgroundColor: 'rgba(45, 106, 79, 0.7)',
+            borderColor: 'rgba(45, 106, 79, 1)',
+            borderWidth: 1,
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// Mapa
+const map = L.map('map').setView([-23.5505, -46.6333], 11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+}).addTo(map);
+
+const eventos = {{ eventos_json|safe }};
+const cores = { planejado: '#0d6efd', realizado: '#198754', cancelado: '#dc3545' };
+
+eventos.forEach(e => {
+    const marker = L.circleMarker([e.lat, e.lng], {
+        color: cores[e.status] || '#888',
+        fillColor: cores[e.status] || '#888',
+        fillOpacity: 0.8,
+        radius: 10
+    }).addTo(map);
+    marker.bindPopup(`
+        <strong>${e.titulo}</strong><br>
+        📍 ${e.bairro}<br>
+        📅 ${e.data}<br>
+        <a href="/events/${e.id}/" class="btn btn-sm btn-success mt-1">Ver detalhes</a>
+    `);
+});
+</script>
+{% endblock %}

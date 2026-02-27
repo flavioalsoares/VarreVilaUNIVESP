@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatórios de Impacto – {{ INST_NOME }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-bar-chart-fill"></i> Relatórios de Impacto</h2>
+    <p class="mb-0 opacity-75">Dados consolidados de todos os mutirões realizados</p>
+</div>
+
+{% if relatorios %}
+<div class="row g-3">
+    {% for r in relatorios %}
+    <div class="col-md-6">
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <h5 class="fw-bold">{{ r.event.titulo }}</h5>
+                <small class="text-muted">{{ r.event.data|date:"d/m/Y" }}</small>
+            </div>
+            <div class="text-muted small mb-3">
+                <i class="bi bi-geo-alt"></i> {{ r.event.bairro }}
+            </div>
+            <div class="row g-2 text-center">
+                <div class="col-4">
+                    <div class="fw-bold fs-4 text-success">{{ r.lixo_kg }} kg</div>
+                    <div class="small text-muted">Lixo</div>
+                </div>
+                <div class="col-4">
+                    <div class="fw-bold fs-4 text-success">{{ r.numero_participantes }}</div>
+                    <div class="small text-muted">Pessoas</div>
+                </div>
+                <div class="col-4">
+                    <div class="fw-bold fs-4 text-success">{{ r.sacos_coletados }}</div>
+                    <div class="small text-muted">Sacos</div>
+                </div>
+            </div>
+            {% if r.observacoes %}
+            <p class="mt-2 small text-muted border-top pt-2">{{ r.observacoes }}</p>
+            {% endif %}
+            <a href="{% url 'events:detalhe' r.event.pk %}" class="btn btn-outline-success btn-sm mt-2">
+                Ver evento <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card p-5 text-center text-muted">
+    <div style="font-size:3rem">📊</div>
+    <h5>Nenhum relatório ainda</h5>
+    <p>Os relatórios serão gerados após a realização dos mutirões.</p>
+</div>
+{% endif %}
+{% endblock %}

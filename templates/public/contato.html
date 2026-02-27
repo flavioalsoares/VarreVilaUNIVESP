@@ -1,0 +1,292 @@
+{% extends 'public/base_publica.html' %}
+
+{% block title %}Como Participar — {{ INST_NOME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-hero {
+        padding: 100px 5% 60px;
+        background: var(--verde-escuro);
+        color: white;
+        text-align: center;
+    }
+
+    .page-hero .tag-verde {
+        background: rgba(116,198,157,0.15);
+        border-color: rgba(116,198,157,0.3);
+        color: var(--verde-claro);
+        margin-bottom: 20px;
+    }
+
+    .page-hero h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(2.2rem, 4vw, 3.5rem);
+        font-weight: 900;
+        margin-bottom: 16px;
+    }
+
+    .page-hero p {
+        font-size: 1.05rem;
+        color: rgba(255,255,255,0.65);
+        max-width: 560px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+
+    /* COMO PARTICIPAR */
+    .secao-como { padding: 100px 5%; background: white; }
+
+    .como-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin-top: 48px;
+    }
+
+    .como-card {
+        border: 1px solid var(--borda);
+        border-radius: 20px;
+        padding: 36px 28px;
+        position: relative;
+        transition: all 0.3s;
+    }
+
+    .como-card:hover {
+        border-color: var(--verde-claro);
+        box-shadow: 0 12px 40px rgba(26,61,43,0.08);
+        transform: translateY(-4px);
+    }
+
+    .como-card .numero {
+        font-family: 'Playfair Display', serif;
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: rgba(45,106,79,0.1);
+        line-height: 1;
+        margin-bottom: 16px;
+    }
+
+    .como-card .icone { font-size: 2rem; margin-bottom: 16px; display: block; }
+
+    .como-card h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--verde-escuro);
+        margin-bottom: 12px;
+    }
+
+    .como-card p { font-size: 0.9rem; color: var(--texto-suave); line-height: 1.7; }
+
+    /* FORMAS DE CONTRIBUIR */
+    .secao-formas { padding: 80px 5%; background: var(--areia); }
+
+    .formas-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-top: 48px;
+    }
+
+    .forma-card {
+        background: white;
+        border-radius: 20px;
+        padding: 36px;
+        border: 1px solid var(--borda);
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+        transition: all 0.3s;
+    }
+
+    .forma-card:hover { border-color: var(--verde-claro); box-shadow: 0 8px 28px rgba(26,61,43,0.07); }
+
+    .forma-icone {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, var(--verde-vivo), var(--verde-escuro));
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .forma-card h3 { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; color: var(--verde-escuro); margin-bottom: 10px; }
+
+    .forma-card p { font-size: 0.88rem; color: var(--texto-suave); line-height: 1.7; }
+
+    /* CONTATOS */
+    .secao-contato {
+        padding: 80px 5%;
+        background: var(--verde-escuro);
+        color: white;
+        text-align: center;
+    }
+
+    .contato-titulo {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.4rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+
+    .contato-desc {
+        color: rgba(255,255,255,0.65);
+        font-size: 1.05rem;
+        margin-bottom: 48px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+    }
+
+    .contato-links { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 60px; }
+
+    .contato-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 100px;
+        padding: 14px 24px;
+        color: white;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.25s;
+    }
+
+    .contato-link:hover {
+        background: rgba(255,255,255,0.15);
+        border-color: var(--verde-claro);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .contato-link i { font-size: 1.1rem; color: var(--verde-claro); }
+
+    .cta-sistema {
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding-top: 48px;
+    }
+
+    .cta-sistema p { color: rgba(255,255,255,0.55); font-size: 0.9rem; margin-bottom: 20px; }
+
+    @media (max-width: 768px) {
+        .como-grid { grid-template-columns: 1fr; }
+        .formas-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-hero">
+    <span class="tag-verde">Faça Parte</span>
+    <h1>Como Participar</h1>
+    <p>Há muitas formas de contribuir com o {{ INST_NOME }}. Escolha a que faz mais sentido para você.</p>
+</div>
+
+<!-- PASSO A PASSO -->
+<section class="secao-como">
+    <div style="text-align:center">
+        <span class="tag-verde" style="margin-bottom:14px">É simples assim</span>
+        <h2 style="font-family:'Playfair Display',serif; font-size:2.2rem; font-weight:700; color:var(--verde-escuro)">Três passos para participar</h2>
+    </div>
+
+    <div class="como-grid">
+        <div class="como-card">
+            <div class="numero">01</div>
+            <span class="icone">📅</span>
+            <h3>Fique de olho na agenda</h3>
+            <p>Acompanhe os próximos mutirões nesta página ou pelas redes sociais do projeto. Os eventos são abertos a qualquer morador interessado.</p>
+        </div>
+        <div class="como-card">
+            <div class="numero">02</div>
+            <span class="icone">📝</span>
+            <h3>Cadastre-se na plataforma</h3>
+            <p>Crie sua conta na área da equipe e confirme sua presença no mutirão. Isso nos ajuda a organizar melhor os materiais e a logística do dia.</p>
+        </div>
+        <div class="como-card">
+            <div class="numero">03</div>
+            <span class="icone">🧹</span>
+            <h3>Apareça e faça acontecer</h3>
+            <p>No dia do mutirão, chegue no horário combinado. Todo material é fornecido. Basta trazer disposição e vontade de transformar o seu bairro.</p>
+        </div>
+    </div>
+
+    <div style="text-align:center; margin-top:48px">
+        <a href="{% url 'users:cadastro' %}" class="btn-primario">
+            <i class="bi bi-person-plus"></i> Criar minha conta agora
+        </a>
+    </div>
+</section>
+
+<!-- FORMAS DE CONTRIBUIR -->
+<section class="secao-formas">
+    <div style="text-align:center">
+        <span class="tag-verde" style="margin-bottom:14px">Diversas formas</span>
+        <h2 style="font-family:'Playfair Display',serif; font-size:2.2rem; font-weight:700; color:var(--verde-escuro)">Você pode contribuir de várias formas</h2>
+    </div>
+
+    <div class="formas-grid">
+        <div class="forma-card">
+            <div class="forma-icone">🧹</div>
+            <div>
+                <h3>Voluntário nos Mutirões</h3>
+                <p>A forma mais direta de participar. Venha limpar as ruas, córregos e espaços públicos do seu bairro com outros moradores. Todo sábado tem ação!</p>
+            </div>
+        </div>
+        <div class="forma-card">
+            <div class="forma-icone">📢</div>
+            <div>
+                <h3>Divulgação e Mobilização</h3>
+                <p>Compartilhe nossas ações nas redes sociais, convide vizinhos e amigos, cole cartazes no seu bairro. A força do projeto está na comunicação boca a boca.</p>
+            </div>
+        </div>
+        <div class="forma-card">
+            <div class="forma-icone">🏫</div>
+            <div>
+                <h3>Escolas e Organizações</h3>
+                <p>Somos abertos a parcerias com escolas, igrejas, associações de moradores e empresas. Entre em contato e vamos planejar uma ação juntos.</p>
+            </div>
+        </div>
+        <div class="forma-card">
+            <div class="forma-icone">🛒</div>
+            <div>
+                <h3>Doação de Materiais</h3>
+                <p>Vassouras, rodos, sacos de lixo, luvas e EPI são sempre bem-vindos. Se você ou sua empresa quiser apoiar, entre em contato conosco.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CONTATO E REDES -->
+<section class="secao-contato">
+    <h2 class="contato-titulo">Fale com a gente</h2>
+    <p class="contato-desc">Siga o projeto nas redes sociais, acompanhe as novidades e entre em contato para parcerias ou dúvidas.</p>
+
+    <div class="contato-links">
+        <a href="{{ INST_FACEBOOK }}" target="_blank" class="contato-link">
+            <i class="bi bi-facebook"></i> Facebook {{ INST_NOME }}
+        </a>
+        <a href="https://passandoalimpo.nossasaopaulo.org.br/noticia/conheca_o_varre_vila_iniciativa_popular_de_limpeza_urbana_em_sao_paulo" target="_blank" class="contato-link">
+            <i class="bi bi-newspaper"></i> Nossas SP
+        </a>
+        <a href="https://ideiasus.fiocruz.br/praticas/projeto-varre-vila/" target="_blank" class="contato-link">
+            <i class="bi bi-heart-pulse"></i> IdeiasSUS Fiocruz
+        </a>
+    </div>
+
+    <div class="cta-sistema">
+        <p>Já quer garantir sua vaga no próximo mutirão?</p>
+        <a href="{% url 'users:cadastro' %}" class="btn-primario" style="background:var(--amarelo);color:var(--verde-escuro);border-color:var(--amarelo)">
+            <i class="bi bi-person-check"></i> Criar conta e se inscrever
+        </a>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: varrevila_db
+    environment:
+      POSTGRES_DB: varrevila
+      POSTGRES_USER: varrevila_user
+      POSTGRES_PASSWORD: varrevila_pass
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U varrevila_user -d varrevila"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: varrevila_web
+    command: sh /app/entrypoint.sh
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DEBUG: "True"
+      SECRET_KEY: "django-insecure-varrevila-academic-demo-key-2024"
+      DB_NAME: varrevila
+      DB_USER: varrevila_user
+      DB_PASSWORD: varrevila_pass
+      DB_HOST: db
+      DB_PORT: "5432"
+
+volumes:
+  db_data:
+  static_volume:
