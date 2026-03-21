@@ -1,7 +1,37 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 echo "=== ${INSTITUICAO_NOME:-Sistema} - Iniciando ambiente ==="
+
+echo "Aguardando banco de dados..."
+while ! python -c "
+import psycopg2, os, sys, socket
+
+host = os.environ.get('DB_HOST', 'db')
+
+# Tenta resolver o nome para IP (contorna limitação de DNS do Podman no Windows)
+try:
+    host = socket.gethostbyname(host)
+except Exception:
+    pass
+
+try:
+    psycopg2.connect(
+        dbname=os.environ.get('DB_NAME', 'varrevila'),
+        user=os.environ.get('DB_USER', 'varrevila_user'),
+        password=os.environ.get('DB_PASSWORD', 'varrevila_pass'),
+        host=host,
+        port=os.environ.get('DB_PORT', '5432'),
+        connect_timeout=3,
+    )
+    sys.exit(0)
+except Exception:
+    sys.exit(1)
+" 2>/dev/null; do
+    echo "  banco ainda não disponível, aguardando 2s..."
+    sleep 2
+done
+echo "Banco de dados pronto!"
 
 echo "Aplicando migrações..."
 python manage.py migrate --noinput
@@ -16,7 +46,6 @@ import datetime
 
 User = get_user_model()
 
-# Criar usuários
 if not User.objects.filter(username='admin').exists():
     User.objects.create_superuser(
         username='admin',
@@ -52,7 +81,6 @@ for i, (nome, sobrenome, bairro) in enumerate([
 
 admin = User.objects.get(username='admin')
 
-# Criar eventos passados (realizados)
 eventos_realizados = [
     {
         'titulo': 'Mutirão Santa Inês - Edição 1',
@@ -156,13 +184,11 @@ for ed in eventos_realizados:
     )
     if created:
         print(f"Evento criado: {evento.titulo}")
-        # Adicionar participantes
         for vol in voluntarios[:3]:
             Participation.objects.get_or_create(
                 user=vol, event=evento,
                 defaults={'presenca_confirmada': True}
             )
-        # Criar relatório de impacto
         ImpactReport.objects.get_or_create(
             event=evento,
             defaults={
@@ -173,10 +199,8 @@ for ed in eventos_realizados:
             }
         )
 
-# Criar eventos futuros (planejados)
 from django.utils import timezone
 hoje = timezone.now().date()
-import datetime
 
 proximos = [
     {
@@ -232,7 +256,6 @@ for ep in proximos:
     )
     if created:
         print(f"Evento planejado criado: {evento.titulo}")
-        # Inscrever alguns voluntários
         for vol in voluntarios[:2]:
             Participation.objects.get_or_create(user=vol, event=evento)
 

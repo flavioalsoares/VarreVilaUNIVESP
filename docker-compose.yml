@@ -12,24 +12,16 @@ services:
       - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U varrevila_user -d varrevila"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   web:
     build: .
     container_name: varrevila_web
-    command: sh /app/entrypoint.sh
     volumes:
-      - .:/app
       - static_volume:/app/staticfiles
     ports:
       - "8000:8000"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     environment:
       DEBUG: "True"
       SECRET_KEY: "django-insecure-varrevila-academic-demo-key-2024"
