@@ -114,7 +114,7 @@
             Nasceu em <strong>Ermelino Matarazzo</strong>, na zona leste de São Paulo, e cresceu organicamente, reunindo moradores, estudantes e organizações em torno de um propósito comum: transformar o ambiente urbano pela ação coletiva.
         </p>
         <p>
-            Hoje o projeto é referência em mobilização comunitária e foi reconhecido por instituições como a <strong>Fiocruz</strong>, a <strong>Prefeitura de São Paulo</strong> e o <strong>SESC SP</strong>.
+            Hoje o projeto é referência em mobilização comunitária e foi reconhecido por instituições como a <strong>{{ INST_APROVA }}</strong>, a <strong>Prefeitura de São Paulo</strong> e o <strong>SESC SP</strong>.
         </p>
         <div style="margin-top:32px">
             <a href="{% url 'public:contato' %}" class="btn-primario">
@@ -152,8 +152,8 @@
                     <div class="tl-dot"></div>
                 </div>
                 <div class="tl-conteudo">
-                    <h4>Reconhecimento Fiocruz</h4>
-                    <p>Projeto selecionado pela Fiocruz como prática inovadora em saúde coletiva.</p>
+                    <h4>Reconhecimento {{ INST_APROVA }}</h4>
+                    <p>Projeto selecionado pela {{ INST_APROVA }} como prática inovadora em saúde coletiva.</p>
                 </div>
             </div>
             <div class="tl-item">
@@ -207,7 +207,7 @@
     <h2 class="reconh-titulo">Reconhecimentos e Parcerias</h2>
     <div class="reconh-grid">
         <div class="reconh-item">
-            <div class="org">Fiocruz</div>
+            <div class="org">{{ INST_APROVA }}</div>
             <h4>Prática Inovadora em Saúde Coletiva</h4>
             <a href="https://ideiasus.fiocruz.br/praticas/projeto-varre-vila/" target="_blank">Ver reconhecimento →</a>
         </div>

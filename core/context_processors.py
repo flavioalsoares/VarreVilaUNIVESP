@@ -14,4 +14,5 @@ def instituicao(request):
         'INST_EMAIL': settings.INSTITUICAO_EMAIL,
         'INST_FACEBOOK': settings.INSTITUICAO_FACEBOOK,
         'INST_ANO_FUNDACAO': settings.INSTITUICAO_ANO_FUNDACAO,
+        'INST_APROVA': settings.INSTITUICAO_APROVA,
     }

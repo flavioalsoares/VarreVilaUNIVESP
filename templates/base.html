@@ -30,9 +30,27 @@
         #map { height: 350px; border-radius: 12px; }
         .page-header { background: linear-gradient(135deg, var(--vv-green), var(--vv-dark)); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
     </style>
+    <style>
+        .disclaimer-univesp {
+            background-color: #fff3cd;
+            border-bottom: 1px solid #ffc107;
+            color: #664d03;
+            font-size: 1.09rem;
+            text-align: center;
+            padding: 8px 16px;
+            line-height: 1.5;
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+<div class="disclaimer-univesp">
+    &#9888; <strong>Projeto Acadêmico</strong><br>
+    Desenvolvido por alunos da disciplina<br>
+    <strong>DRP14-Projeto Integrador em Computação I-Turma 005</strong><br>
+    <strong>UNIVESP &ndash; Universidade Virtual do Estado de São Paulo</strong><br>
+    <strong>ATENÇÃO: TODOS OS NOMES E DADOS SÃO FICTÍCIOS E USADOS SOMENTE PARA FINS DE SIMULAÇÃO.</strong>
+</div>
 <nav class="navbar navbar-dark navbar-expand-lg">
     <div class="container-fluid">
         <a class="navbar-brand" href="{% url 'dashboard:index' %}">

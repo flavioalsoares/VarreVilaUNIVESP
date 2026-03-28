@@ -33,7 +33,7 @@
         /* ── NAVBAR ── */
         .navbar-publica {
             position: fixed;
-            top: 0; left: 0; right: 0;
+            top: 140px; left: 0; right: 0;
             z-index: 1000;
             padding: 18px 5%;
             display: flex;
@@ -264,9 +264,31 @@
             .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
         }
     </style>
+    <style>
+        .disclaimer-univesp {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1001;
+            background-color: #fff3cd;
+            border-bottom: 1px solid #ffc107;
+            color: #664d03;
+            font-size: 1.05rem;
+            text-align: center;
+            padding: 8px 16px;
+            line-height: 1.5;
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+
+<div class="disclaimer-univesp">
+    &#9888; <strong>Projeto Acadêmico</strong><br>
+    Desenvolvido por alunos da disciplina<br>
+    <strong>DRP14-Projeto Integrador em Computação I-Turma 005</strong><br>
+    <strong>UNIVESP &ndash; Universidade Virtual do Estado de São Paulo</strong><br>
+    <strong>ATENÇÃO: TODOS OS NOMES E DADOS SÃO FICTÍCIOS E USADOS SOMENTE PARA FINS DE SIMULAÇÃO.</strong>
+</div>
 
 <nav class="navbar-publica" id="navbar">
     <a href="{% url 'public:home' %}" class="logo">
@@ -324,7 +346,7 @@
             <ul>
                 <li><a href="{{ INST_FACEBOOK }}" target="_blank">Facebook</a></li>
                 <li><a href="https://passandoalimpo.nossasaopaulo.org.br/noticia/conheca_o_varre_vila_iniciativa_popular_de_limpeza_urbana_em_sao_paulo" target="_blank">Nossas São Paulo</a></li>
-                <li><a href="https://ideiasus.fiocruz.br/praticas/projeto-varre-vila/" target="_blank">IdeiasSUS / Fiocruz</a></li>
+                <li><a href="https://ideiasus.fiocruz.br/praticas/projeto-varre-vila/" target="_blank">IdeiasSUS / {{ INST_APROVA }}</a></li>
                 <li><a href="{% url 'users:login' %}">Área da Equipe</a></li>
             </ul>
         </div>
