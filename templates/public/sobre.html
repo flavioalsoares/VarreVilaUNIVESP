@@ -114,7 +114,7 @@
             Nasceu em <strong>Ermelino Matarazzo</strong>, na zona leste de São Paulo, e cresceu organicamente, reunindo moradores, estudantes e organizações em torno de um propósito comum: transformar o ambiente urbano pela ação coletiva.
         </p>
         <p>
-            Hoje o projeto é referência em mobilização comunitária e foi reconhecido por instituições como a <strong>{{ INST_APROVA }}</strong>, a <strong>Prefeitura de São Paulo</strong> e o <strong>SESC SP</strong>.
+            Hoje o projeto é referência em mobilização comunitária e foi reconhecido por instituições como a <strong>{{ INST_APROVA_1 }}</strong>, a <strong>{{ INST_APROVA_2 }}</strong> e o <strong>{{ INST_APROVA_3 }}</strong>.
         </p>
         <div style="margin-top:32px">
             <a href="{% url 'public:contato' %}" class="btn-primario">
@@ -152,8 +152,8 @@
                     <div class="tl-dot"></div>
                 </div>
                 <div class="tl-conteudo">
-                    <h4>Reconhecimento {{ INST_APROVA }}</h4>
-                    <p>Projeto selecionado pela {{ INST_APROVA }} como prática inovadora em saúde coletiva.</p>
+                    <h4>Reconhecimento {{ INST_APROVA_1 }}</h4>
+                    <p>Projeto selecionado pela {{ INST_APROVA_1 }} como prática inovadora em saúde coletiva.</p>
                 </div>
             </div>
             <div class="tl-item">
@@ -162,7 +162,7 @@
                     <div class="tl-dot"></div>
                 </div>
                 <div class="tl-conteudo">
-                    <h4>Parceria SESC SP</h4>
+                    <h4>Parceria {{ INST_APROVA_3 }}</h4>
                     <p>Realização de ações em parceria com o SESC São Paulo.</p>
                 </div>
             </div>
@@ -207,12 +207,12 @@
     <h2 class="reconh-titulo">Reconhecimentos e Parcerias</h2>
     <div class="reconh-grid">
         <div class="reconh-item">
-            <div class="org">{{ INST_APROVA }}</div>
+            <div class="org">{{ INST_APROVA_1 }}</div>
             <h4>Prática Inovadora em Saúde Coletiva</h4>
             <a href="https://ideiasus.fiocruz.br/praticas/projeto-varre-vila/" target="_blank">Ver reconhecimento →</a>
         </div>
         <div class="reconh-item">
-            <div class="org">SESC SP</div>
+            <div class="org">{{ INST_APROVA_3 }}</div>
             <h4>Parceria em Ações Comunitárias</h4>
             <a href="https://www.sescsp.org.br/varre-vila-da-comunidade-santa-ines-em-ermelino-matarazzo/" target="_blank">Ver publicação →</a>
         </div>
@@ -222,7 +222,7 @@
             <a href="https://passandoalimpo.nossasaopaulo.org.br/noticia/conheca_o_varre_vila_iniciativa_popular_de_limpeza_urbana_em_sao_paulo" target="_blank">Ver reportagem →</a>
         </div>
         <div class="reconh-item">
-            <div class="org">Prefeitura de São Paulo</div>
+            <div class="org">{{ INST_APROVA_2 }}</div>
             <h4>Apresentação no Conselho CADES</h4>
             <a href="https://prefeitura.sp.gov.br/web/casa_verde/w/idealizador-do-varre-vila-fala-sobre-sua-experi%C3%AAncia-aos-conselheiros-do-cades" target="_blank">Ver publicação →</a>
         </div>

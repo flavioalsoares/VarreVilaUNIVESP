@@ -110,4 +110,6 @@ INSTITUICAO_SLOGAN = os.environ.get('INSTITUICAO_SLOGAN', 'Movimento Popular de 
 INSTITUICAO_EMAIL = os.environ.get('INSTITUICAO_EMAIL', 'contato@varrevila.org')
 INSTITUICAO_FACEBOOK = os.environ.get('INSTITUICAO_FACEBOOK', 'https://www.facebook.com/varrevila/')
 INSTITUICAO_ANO_FUNDACAO = os.environ.get('INSTITUICAO_ANO_FUNDACAO', '2018')
-INSTITUICAO_APROVA = os.environ.get('INSTITUICAO_APROVA', 'Aprovador')
+INSTITUICAO_APROVA_1 = os.environ.get('INSTITUICAO_APROVA_1', 'Aprovador 1')
+INSTITUICAO_APROVA_2 = os.environ.get('INSTITUICAO_APROVA_2', 'Aprovador 2')
+INSTITUICAO_APROVA_3 = os.environ.get('INSTITUICAO_APROVA_3', 'Aprovador 3')
