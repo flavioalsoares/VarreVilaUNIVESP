@@ -8,8 +8,9 @@
     <div class="col-md-5">
         <div class="card p-4">
             <div class="text-center mb-4">
-                <div style="font-size:3rem">🧹</div>
-                <h3 class="fw-bold" style="color:#2d6a4f">{{ INST_NOME }}</h3>
+                {% load static %}
+                <img src="{% static 'img/logo-varrevila.png' %}" alt="{{ INST_NOME }}" class="auth-logo mb-3">
+                <h3 class="fw-bold" style="color:var(--vv-graphite)">{{ INST_NOME }}</h3>
                 <p class="text-muted">{{ INST_SLOGAN }}</p>
             </div>
             <h5 class="mb-3">Entrar no sistema</h5>

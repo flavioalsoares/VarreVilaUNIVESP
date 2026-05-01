@@ -27,7 +27,8 @@ DATABASES = {
 #  ARQUIVOS ESTÁTICOS (WhiteNoise)
 #  Serve os estáticos sem precisar de Nginx
 # ─────────────────────────────────────────────
-MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 

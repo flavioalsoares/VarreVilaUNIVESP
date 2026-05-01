@@ -1,24 +1,26 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ INST_NOME }} — {{ INST_SLOGAN }}{% endblock %}</title>
+    <link rel="icon" href="{% static 'img/logo-varrevila.png' %}" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         :root {
-            --verde-escuro: #1a3d2b;
-            --verde-medio: #2d6a4f;
-            --verde-vivo: #40916c;
-            --verde-claro: #74c69d;
-            --amarelo: #f9c74f;
-            --areia: #fdf8f0;
-            --texto: #1c1c1c;
+            --verde-escuro: #282929;
+            --verde-medio: #7fa327;
+            --verde-vivo: #a6ce39;
+            --verde-claro: #cce88a;
+            --amarelo: #e17b38;
+            --areia: #f7f8f1;
+            --texto: #282929;
             --texto-suave: #5a5a5a;
-            --borda: #e0d8cc;
+            --borda: #dde4cd;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -53,19 +55,15 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             text-decoration: none;
         }
 
-        .logo-icon {
-            width: 42px;
-            height: 42px;
-            background: var(--verde-escuro);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
+        .logo-marca {
+            width: 132px;
+            height: 132px;
+            object-fit: contain;
+            flex: 0 0 auto;
         }
 
         .logo-texto {
@@ -102,7 +100,7 @@
         }
 
         .nav-links a:hover {
-            background: rgba(45, 106, 79, 0.1);
+            background: rgba(166, 206, 57, 0.18);
             color: var(--verde-medio);
         }
 
@@ -125,9 +123,10 @@
         }
 
         .btn-sistema:hover {
-            background: var(--verde-medio) !important;
+            background: var(--verde-vivo) !important;
+            color: var(--verde-escuro) !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(26,61,43,0.3);
+            box-shadow: 0 4px 16px rgba(40,41,41,0.22);
         }
 
         .hamburger {
@@ -156,6 +155,7 @@
             margin-bottom: 48px;
         }
 
+        .footer-brand .logo-marca { background: white; border-radius: 50%; padding: 3px; }
         .footer-brand .logo-texto { color: white; }
         .footer-brand .logo-subtexto { color: rgba(255,255,255,0.5); }
         .footer-brand p {
@@ -202,7 +202,7 @@
         /* ── UTILITÁRIOS ── */
         .tag-verde {
             display: inline-block;
-            background: rgba(64, 145, 108, 0.12);
+            background: rgba(166, 206, 57, 0.16);
             color: var(--verde-medio);
             font-size: 0.75rem;
             font-weight: 600;
@@ -210,7 +210,7 @@
             text-transform: uppercase;
             padding: 5px 14px;
             border-radius: 100px;
-            border: 1px solid rgba(64, 145, 108, 0.25);
+            border: 1px solid rgba(166, 206, 57, 0.38);
         }
 
         .btn-primario {
@@ -229,11 +229,11 @@
         }
 
         .btn-primario:hover {
-            background: var(--verde-medio);
-            border-color: var(--verde-medio);
-            color: white;
+            background: var(--verde-vivo);
+            border-color: var(--verde-vivo);
+            color: var(--verde-escuro);
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(26,61,43,0.25);
+            box-shadow: 0 8px 24px rgba(40,41,41,0.22);
         }
 
         .btn-secundario {
@@ -257,6 +257,7 @@
         }
 
         @media (max-width: 768px) {
+            .logo-marca { width: 76px; height: 76px; }
             .nav-links { display: none; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--areia); border-bottom: 1px solid var(--borda); padding: 16px; }
             .nav-links.aberto { display: flex; }
             .hamburger { display: block; }
@@ -292,7 +293,7 @@
 
 <nav class="navbar-publica" id="navbar">
     <a href="{% url 'public:home' %}" class="logo">
-        <div class="logo-icon">🧹</div>
+        <img src="{% static 'img/logo-varrevila.png' %}" alt="{{ INST_NOME }}" class="logo-marca">
         <div>
             <div class="logo-texto">{{ INST_NOME }}</div>
             <div class="logo-subtexto">{{ INST_SUBTITULO }}</div>
@@ -324,7 +325,7 @@
     <div class="footer-grid">
         <div class="footer-brand">
             <a href="{% url 'public:home' %}" class="logo">
-                <div class="logo-icon">🧹</div>
+                <img src="{% static 'img/logo-varrevila.png' %}" alt="{{ INST_NOME }}" class="logo-marca">
                 <div>
                     <div class="logo-texto">{{ INST_NOME }}</div>
                     <div class="logo-subtexto">{{ INST_SUBTITULO }}</div>

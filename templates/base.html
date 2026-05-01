@@ -1,34 +1,45 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ INST_NOME }}{% endblock %}</title>
+    <link rel="icon" href="{% static 'img/logo-varrevila.png' %}" type="image/png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <style>
         :root {
-            --vv-green: #2d6a4f;
-            --vv-light: #95d5b2;
-            --vv-dark: #1b4332;
+            --vv-lime: #a6ce39;
+            --vv-lime-soft: #eef7d2;
+            --vv-orange: #e17b38;
+            --vv-graphite: #282929;
+            --vv-graphite-soft: #3f4141;
+            --vv-white: #ffffff;
         }
         body { background-color: #f8f9fa; }
-        .navbar { background-color: var(--vv-dark) !important; }
-        .navbar-brand { font-weight: 700; font-size: 1.4rem; }
-        .btn-success { background-color: var(--vv-green); border-color: var(--vv-green); }
-        .btn-success:hover { background-color: var(--vv-dark); border-color: var(--vv-dark); }
+        .navbar { background-color: var(--vv-graphite) !important; }
+        .navbar-brand { font-weight: 700; font-size: 1.25rem; display: inline-flex; align-items: center; gap: 10px; }
+        .brand-logo { width: 92px; height: 92px; object-fit: contain; background: white; border-radius: 50%; padding: 4px; }
+        .auth-logo { width: 180px; height: 180px; object-fit: contain; }
+        .btn-success { background-color: var(--vv-lime); border-color: var(--vv-lime); color: var(--vv-graphite); font-weight: 600; }
+        .btn-success:hover, .btn-success:focus { background-color: #94ba30; border-color: #94ba30; color: var(--vv-graphite); }
+        .btn-outline-success { color: var(--vv-graphite); border-color: var(--vv-lime); }
+        .btn-outline-success:hover, .btn-outline-success:focus { background-color: var(--vv-lime); border-color: var(--vv-lime); color: var(--vv-graphite); }
+        .text-success { color: var(--vv-orange) !important; }
+        .bg-success { background-color: var(--vv-lime) !important; color: var(--vv-graphite) !important; }
         .card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px; }
-        .stat-card { background: linear-gradient(135deg, var(--vv-green), var(--vv-dark)); color: white; }
+        .stat-card { background: linear-gradient(135deg, var(--vv-graphite), var(--vv-graphite-soft)); color: white; border-bottom: 4px solid var(--vv-lime); }
         .badge-planejado { background-color: #0d6efd; }
-        .badge-realizado { background-color: #198754; }
+        .badge-realizado { background-color: var(--vv-lime); color: var(--vv-graphite); }
         .badge-cancelado { background-color: #dc3545; }
         .sidebar { background-color: white; min-height: calc(100vh - 56px); border-right: 1px solid #dee2e6; }
         .sidebar .nav-link { color: #495057; padding: 10px 16px; border-radius: 8px; margin: 2px 8px; }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #e8f5e9; color: var(--vv-green); }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: var(--vv-lime-soft); color: var(--vv-graphite); }
         .sidebar .nav-link i { width: 20px; }
         #map { height: 350px; border-radius: 12px; }
-        .page-header { background: linear-gradient(135deg, var(--vv-green), var(--vv-dark)); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; }
+        .page-header { background: linear-gradient(135deg, var(--vv-graphite), var(--vv-graphite-soft)); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; border-bottom: 4px solid var(--vv-lime); }
     </style>
     <style>
         .disclaimer-univesp {
@@ -54,7 +65,8 @@
 <nav class="navbar navbar-dark navbar-expand-lg">
     <div class="container-fluid">
         <a class="navbar-brand" href="{% url 'dashboard:index' %}">
-            🧹 {{ INST_NOME }}
+            <img src="{% static 'img/logo-varrevila.png' %}" alt="{{ INST_NOME }}" class="brand-logo">
+            <span>{{ INST_NOME }}</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
