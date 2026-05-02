@@ -16,9 +16,8 @@
             --verde-medio: #7fa327;
             --verde-vivo: #a6ce39;
             --verde-claro: #cce88a;
-            --amarelo: #e17b38;
+            --laranja: #e17b38;
             --areia: #f7f8f1;
-            --texto: #282929;
             --texto-suave: #5a5a5a;
             --borda: #dde4cd;
         }
@@ -28,14 +27,14 @@
         body {
             font-family: 'DM Sans', sans-serif;
             background-color: var(--areia);
-            color: var(--texto);
+            color: var(--verde-escuro);
             overflow-x: hidden;
         }
 
         /* ── NAVBAR ── */
         .navbar-publica {
-            position: fixed;
-            top: 140px; left: 0; right: 0;
+            position: sticky;
+            top: 0;
             z-index: 1000;
             padding: 18px 5%;
             display: flex;
@@ -91,7 +90,7 @@
 
         .nav-links a {
             text-decoration: none;
-            color: var(--texto);
+            color: var(--verde-escuro);
             font-size: 0.9rem;
             font-weight: 500;
             padding: 8px 16px;
@@ -139,7 +138,7 @@
         }
 
         /* ── CONTEÚDO PRINCIPAL ── */
-        main { padding-top: 80px; }
+        main { padding-top: 0; }
 
         /* ── FOOTER ── */
         footer {
@@ -267,9 +266,6 @@
     </style>
     <style>
         .disclaimer-univesp {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 1001;
             background-color: #fff3cd;
             border-bottom: 1px solid #ffc107;
             color: #664d03;
