@@ -63,7 +63,10 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'varrevila'),
         'USER': os.environ.get('DB_USER', 'varrevila_user'),
-        'PASSWORD': os.environ['DB_PASSWORD'],
+        # Em produção este dict é substituído por dj_database_url em settings_production.py.
+        # Default vazio (não 'varrevila_pass') evita KeyError no import e força falha
+        # de autenticação clara caso .env não defina DB_PASSWORD em dev.
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
