@@ -151,10 +151,13 @@
                         <div class="text-muted small">{{ p.user.bairro|default:"" }}</div>
                     </div>
                     {% if user.is_admin_vv %}
-                    <a href="{% url 'events:confirmar_presenca' evento.pk p.user.pk %}"
-                       class="badge {% if p.presenca_confirmada %}bg-success{% else %}bg-secondary{% endif %} text-decoration-none">
-                        {% if p.presenca_confirmada %}<i class="bi bi-check"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
-                    </a>
+                    <form method="post" action="{% url 'events:confirmar_presenca' evento.pk p.user.pk %}" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="badge border-0 {% if p.presenca_confirmada %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if p.presenca_confirmada %}<i class="bi bi-check"></i>{% else %}<i class="bi bi-circle"></i>{% endif %}
+                        </button>
+                    </form>
                     {% else %}
                     <span class="badge {% if p.presenca_confirmada %}bg-success{% else %}bg-secondary{% endif %}">
                         {% if p.presenca_confirmada %}✓{% else %}—{% endif %}

@@ -92,11 +92,14 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ labels|json_script:"labels-data" }}
+{{ dados_lixo|json_script:"dados-data" }}
+{{ eventos_data|json_script:"eventos-data" }}
 <script>
 // Gráfico
 const ctx = document.getElementById('graficoMensal').getContext('2d');
-const labels = {{ labels|safe }};
-const dados = {{ dados_lixo|safe }};
+const labels = JSON.parse(document.getElementById('labels-data').textContent);
+const dados = JSON.parse(document.getElementById('dados-data').textContent);
 new Chart(ctx, {
     type: 'bar',
     data: {
@@ -123,7 +126,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
 }).addTo(map);
 
-const eventos = {{ eventos_json|safe }};
+const eventos = JSON.parse(document.getElementById('eventos-data').textContent);
 const cores = { planejado: '#0d6efd', realizado: '#a6ce39', cancelado: '#dc3545' };
 
 eventos.forEach(e => {
@@ -133,12 +136,23 @@ eventos.forEach(e => {
         fillOpacity: 0.8,
         radius: 10
     }).addTo(map);
-    marker.bindPopup(`
-        <strong>${e.titulo}</strong><br>
-        📍 ${e.bairro}<br>
-        📅 ${e.data}<br>
-        <a href="/events/${e.id}/" class="btn btn-sm btn-success mt-1">Ver detalhes</a>
-    `);
+
+    // Constrói o popup via DOM (textContent escapa automaticamente — sem XSS)
+    const popup = document.createElement('div');
+    const titulo = document.createElement('strong');
+    titulo.textContent = e.titulo;
+    popup.appendChild(titulo);
+    popup.appendChild(document.createElement('br'));
+    popup.appendChild(document.createTextNode('📍 ' + e.bairro));
+    popup.appendChild(document.createElement('br'));
+    popup.appendChild(document.createTextNode('📅 ' + e.data));
+    popup.appendChild(document.createElement('br'));
+    const link = document.createElement('a');
+    link.href = '/events/' + encodeURIComponent(e.id) + '/';
+    link.className = 'btn btn-sm btn-success mt-1';
+    link.textContent = 'Ver detalhes';
+    popup.appendChild(link);
+    marker.bindPopup(popup);
 });
 </script>
 {% endblock %}

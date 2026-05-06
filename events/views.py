@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.views.decorators.http import require_POST
 from .models import Event, Participation
 from .forms import EventForm
 
@@ -57,6 +58,7 @@ def editar_evento(request, pk):
 
 
 @login_required
+@require_POST
 def inscrever_evento(request, pk):
     evento = get_object_or_404(Event, pk=pk)
     if evento.status != 'planejado':
@@ -74,6 +76,7 @@ def inscrever_evento(request, pk):
 
 
 @login_required
+@require_POST
 def cancelar_inscricao(request, pk):
     evento = get_object_or_404(Event, pk=pk)
     Participation.objects.filter(user=request.user, event=evento).delete()
@@ -82,6 +85,7 @@ def cancelar_inscricao(request, pk):
 
 
 @login_required
+@require_POST
 def confirmar_presenca(request, pk, user_id):
     if not request.user.is_admin_vv():
         messages.error(request, 'Acesso negado.')

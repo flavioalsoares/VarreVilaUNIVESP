@@ -5,7 +5,6 @@ from django.db.models.functions import TruncMonth
 from events.models import Event, Participation
 from impact.models import ImpactReport
 from users.models import CustomUser
-import json
 
 
 @login_required
@@ -43,7 +42,7 @@ def index(request):
         'id', 'titulo', 'local', 'bairro', 'status', 'data',
         'latitude', 'longitude'
     )
-    eventos_json = json.dumps([
+    eventos_data = [
         {
             'id': e['id'],
             'titulo': e['titulo'],
@@ -55,7 +54,7 @@ def index(request):
             'lng': float(e['longitude']),
         }
         for e in eventos_mapa
-    ])
+    ]
 
     context = {
         'total_mutiroes': total_mutiroes,
@@ -64,8 +63,8 @@ def index(request):
         'total_lixo': total_lixo,
         'total_sacos': total_sacos,
         'proximos': proximos,
-        'labels': json.dumps(labels),
-        'dados_lixo': json.dumps(dados_lixo),
-        'eventos_json': eventos_json,
+        'labels': labels,
+        'dados_lixo': dados_lixo,
+        'eventos_data': eventos_data,
     }
     return render(request, 'dashboard/index.html', context)

@@ -4,7 +4,10 @@ Popula o banco com dados de demonstração do Varre Vila.
 Seguro para rodar múltiplas vezes (usa get_or_create).
 """
 
-from django.core.management.base import BaseCommand
+import os
+
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from events.models import Event, Participation
@@ -17,6 +20,12 @@ class Command(BaseCommand):
     help = 'Popula o banco com dados de demonstração'
 
     def handle(self, *args, **kwargs):
+        if not settings.DEBUG and os.environ.get('LOAD_DEMO_DATA') != '1':
+            raise CommandError(
+                'populate_demo bloqueado fora de DEBUG. '
+                'Defina LOAD_DEMO_DATA=1 explicitamente para forçar.'
+            )
+
         User = get_user_model()
 
         # ─── Superusuário ───────────────────────────────────────────────
