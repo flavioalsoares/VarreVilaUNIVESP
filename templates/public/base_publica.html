@@ -20,13 +20,16 @@
             --areia: #f7f8f1;
             --texto-suave: #5a5a5a;
             --borda: #dde4cd;
+            --page-tint: #e6efd0;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'DM Sans', sans-serif;
-            background-color: var(--areia);
+            background: linear-gradient(135deg, var(--areia) 0%, var(--page-tint) 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
             color: var(--verde-escuro);
             overflow-x: hidden;
         }

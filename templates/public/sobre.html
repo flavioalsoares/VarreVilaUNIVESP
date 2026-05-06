@@ -4,13 +4,14 @@
 
 {% block extra_css %}
 <style>
+    :root { --page-tint: #fbe9d9; }
+
     .hero-sobre {
         padding: 100px 5% 80px;
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 80px;
         align-items: center;
-        background: white;
         border-bottom: 1px solid var(--borda);
     }
 
@@ -49,7 +50,7 @@
     .tl-conteudo p { font-size: 0.82rem; color: rgba(255,255,255,0.55); line-height: 1.5; }
 
     /* Pilares */
-    .secao-pilares { padding: 100px 5%; background: var(--areia); }
+    .secao-pilares { padding: 100px 5%; }
     .secao-pilares .secao-titulo { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 700; color: var(--verde-escuro); text-align: center; margin-bottom: 60px; }
 
     .pilares-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
@@ -71,7 +72,7 @@
     .pilar-card p { font-size: 0.9rem; color: var(--texto-suave); line-height: 1.7; }
 
     /* Reconhecimentos */
-    .secao-reconhecimentos { padding: 80px 5%; background: white; border-top: 1px solid var(--borda); }
+    .secao-reconhecimentos { padding: 80px 5%; border-top: 1px solid var(--borda); }
 
     .reconh-titulo { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--verde-escuro); text-align: center; margin-bottom: 48px; }
 
