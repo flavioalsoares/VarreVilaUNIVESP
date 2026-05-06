@@ -14,10 +14,11 @@
 5. [Pré-requisitos](#pré-requisitos)
 6. [Instalação e Execução](#instalação-e-execução)
 7. [Contas de Demonstração](#contas-de-demonstração)
-8. [Estrutura do Projeto](#estrutura-do-projeto)
-9. [Comandos Úteis](#comandos-úteis)
-10. [Desenvolvimento Local](#desenvolvimento-local)
-11. [Contribuindo](#contribuindo)
+8. [Gerenciamento de Segredos](#gerenciamento-de-segredos)
+9. [Estrutura do Projeto](#estrutura-do-projeto)
+10. [Comandos Úteis](#comandos-úteis)
+11. [Desenvolvimento Local](#desenvolvimento-local)
+12. [Contribuindo](#contribuindo)
 
 ---
 
@@ -179,12 +180,22 @@ git clone <url-do-repositorio> sistema-comunitario
 cd sistema-comunitario
 ```
 
-### 2. (Opcional) Configurar o nome da organização
+### 2. Criar o arquivo `.env`
+
+O sistema **exige** que `SECRET_KEY` e `DB_PASSWORD` estejam definidas — sem elas o container falha imediatamente. Copie o template e ajuste se quiser:
+
+```bash
+cp .env.example .env
+```
+
+O arquivo `.env` é ignorado pelo Git e contém as credenciais usadas localmente. Veja [Gerenciamento de Segredos](#gerenciamento-de-segredos) para detalhes.
+
+### 3. (Opcional) Configurar o nome da organização
 
 Edite `config/settings.py` ou defina variáveis de ambiente conforme descrito em
 [Configuração do Nome da Organização](#configuração-do-nome-da-organização).
 
-### 3. Subir o ambiente
+### 4. Subir o ambiente
 
 ```bash
 podman-compose up --build
@@ -197,7 +208,7 @@ O sistema irá automaticamente:
 - Carregar os dados de demonstração
 - Iniciar o servidor Gunicorn
 
-### 4. Acessar
+### 5. Acessar
 
 Após a mensagem `Sistema pronto!` aparecer no terminal:
 
@@ -207,7 +218,7 @@ Após a mensagem `Sistema pronto!` aparecer no terminal:
 | Sistema interno | http://localhost:8000/sistema/ |
 | Painel administrativo | http://localhost:8000/admin/ |
 
-### 5. Parar
+### 6. Parar
 
 ```bash
 podman-compose down          # para mantendo dados
@@ -224,6 +235,73 @@ podman-compose down -v       # para e apaga o banco
 | Voluntário 1 | `voluntario1` | `voluntario123` |
 | Voluntário 2 | `voluntario2` | `voluntario123` |
 | Voluntário 3 | `voluntario3` | `voluntario123` |
+
+---
+
+## 🔐 Gerenciamento de Segredos
+
+O sistema **não** mantém senhas em código nem no Git. As credenciais sensíveis (`SECRET_KEY` do Django e `DB_PASSWORD` do Postgres) são lidas exclusivamente de variáveis de ambiente. Se faltarem, o container falha imediatamente com mensagem clara — não há fallback silencioso para senha conhecida.
+
+### Em desenvolvimento local
+
+A fonte das credenciais é o arquivo `.env` na raiz do projeto (gitignored).
+
+```bash
+# Ver as credenciais atuais
+cat .env
+
+# Trocar a senha do banco local
+# 1) Atualize DB_PASSWORD no .env
+# 2) Recrie o volume do Postgres (descarta dados):
+podman-compose down -v
+podman-compose up --build
+```
+
+**Boas práticas para o time:**
+- Nunca commit do `.env`. O `.gitignore` já bloqueia, mas confira antes de cada push.
+- Cada integrante mantém o próprio `.env` na própria máquina.
+- Para compartilhar credenciais com um novo integrante, use um gerenciador de senhas (Bitwarden, 1Password, KeePass) — **nunca** e-mail ou chat em texto puro.
+
+### Em produção (Render.com)
+
+Em produção **ninguém memoriza a senha** — quem precisa, consulta no painel quando for usar:
+
+| O que | Onde |
+|---|---|
+| `SECRET_KEY` | Gerada automaticamente no primeiro deploy (`generateValue: true` em `render.yaml`) |
+| Senha do Postgres | Gerada e gerenciada pelo Render; injetada no serviço web via `DATABASE_URL` |
+| String de conexão | Render Dashboard → `varre-vila-db` → *Connection details* |
+
+**O que o administrador faz:**
+
+1. **Para conectar manualmente ao banco** (depurar, rodar `psql`):
+   - Copie a `External Database URL` no painel do Render.
+   - `psql "<URL_COPIADA>"` — a senha vai dentro da URL, sem ser digitada.
+
+2. **Para rotacionar a senha do banco** (recomendado anualmente, ou imediatamente após qualquer suspeita de vazamento):
+   - Painel do Render → banco → *Rotate password*. O Render atualiza o `DATABASE_URL` no serviço web e refaz o deploy automaticamente.
+
+3. **Para criar um usuário de leitura** (ex.: para análise de dados sem risco de escrita):
+   ```sql
+   CREATE USER analise_readonly WITH PASSWORD 'gere-uma-senha-forte';
+   GRANT CONNECT ON DATABASE varrevila TO analise_readonly;
+   GRANT USAGE ON SCHEMA public TO analise_readonly;
+   GRANT SELECT ON ALL TABLES IN SCHEMA public TO analise_readonly;
+   ```
+
+4. **Controle de acesso ao painel**:
+   - Habilite 2FA na conta do Render.
+   - Adicione cada integrante como collaborator separado — não compartilhe login.
+
+### Resumo mental
+
+| Onde está? | Quem precisa saber? | Como recuperar? |
+|---|---|---|
+| `.env` local | Cada dev na própria máquina | Abrir o arquivo |
+| Senha do banco em produção | Ninguém memoriza | Painel do Render quando precisar |
+| Login do painel Render | Admins do projeto + 2FA | Gerenciador de senhas pessoal |
+
+A regra é: **a senha do banco em produção não é um segredo que você guarda — é um segredo que o sistema guarda por você.**
 
 ---
 

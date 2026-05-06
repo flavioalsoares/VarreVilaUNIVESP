@@ -5,9 +5,9 @@ services:
     image: postgres:15
     container_name: varrevila_db
     environment:
-      POSTGRES_DB: varrevila
-      POSTGRES_USER: varrevila_user
-      POSTGRES_PASSWORD: varrevila_pass
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
@@ -22,14 +22,8 @@ services:
       - "8000:8000"
     depends_on:
       - db
-    environment:
-      DEBUG: "True"
-      SECRET_KEY: "django-insecure-varrevila-academic-demo-key-2024"
-      DB_NAME: varrevila
-      DB_USER: varrevila_user
-      DB_PASSWORD: varrevila_pass
-      DB_HOST: db
-      DB_PORT: "5432"
+    env_file:
+      - .env
 
 volumes:
   db_data:

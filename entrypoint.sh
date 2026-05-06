@@ -3,6 +3,9 @@ set -e
 
 echo "=== ${INSTITUICAO_NOME:-Sistema} - Iniciando ambiente ==="
 
+: "${SECRET_KEY:?SECRET_KEY não definida no ambiente}"
+: "${DB_PASSWORD:?DB_PASSWORD não definida no ambiente}"
+
 echo "Aguardando banco de dados..."
 while ! python -c "
 import psycopg2, os, sys, socket
@@ -19,7 +22,7 @@ try:
     psycopg2.connect(
         dbname=os.environ.get('DB_NAME', 'varrevila'),
         user=os.environ.get('DB_USER', 'varrevila_user'),
-        password=os.environ.get('DB_PASSWORD', 'varrevila_pass'),
+        password=os.environ['DB_PASSWORD'],
         host=host,
         port=os.environ.get('DB_PORT', '5432'),
         connect_timeout=3,
