@@ -108,12 +108,12 @@ LOGOUT_REDIRECT_URL = '/users/login/'
 #  as variáveis abaixo ou defina as variáveis
 #  de ambiente correspondentes.
 # ─────────────────────────────────────────────
-INSTITUICAO_NOME = os.environ.get('INSTITUICAO_NOME', 'Nome Projeto')
+INSTITUICAO_NOME = os.environ.get('INSTITUICAO_NOME', 'Varre Vila')
 INSTITUICAO_SUBTITULO = os.environ.get('INSTITUICAO_SUBTITULO', 'Limpeza Comunitária')
 INSTITUICAO_SLOGAN = os.environ.get('INSTITUICAO_SLOGAN', 'Movimento Popular de Limpeza Urbana em São Paulo')
 INSTITUICAO_EMAIL = os.environ.get('INSTITUICAO_EMAIL', 'contato@varrevila.org')
 INSTITUICAO_FACEBOOK = os.environ.get('INSTITUICAO_FACEBOOK', 'https://www.facebook.com/varrevila/')
 INSTITUICAO_ANO_FUNDACAO = os.environ.get('INSTITUICAO_ANO_FUNDACAO', '2018')
-INSTITUICAO_APROVA_1 = os.environ.get('INSTITUICAO_APROVA_1', 'Aprovador 1')
-INSTITUICAO_APROVA_2 = os.environ.get('INSTITUICAO_APROVA_2', 'Aprovador 2')
-INSTITUICAO_APROVA_3 = os.environ.get('INSTITUICAO_APROVA_3', 'Aprovador 3')
+INSTITUICAO_APROVA_1 = os.environ.get('INSTITUICAO_APROVA_1', 'Fiocruz')
+INSTITUICAO_APROVA_2 = os.environ.get('INSTITUICAO_APROVA_2', 'Prefeitura de São Paulo')
+INSTITUICAO_APROVA_3 = os.environ.get('INSTITUICAO_APROVA_3', 'SESC SP')
