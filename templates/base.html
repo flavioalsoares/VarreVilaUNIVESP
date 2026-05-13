@@ -63,7 +63,7 @@
 </div>
 <nav class="navbar navbar-dark navbar-expand-lg">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'dashboard:index' %}">
+        <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'dashboard:index' %}{% else %}{% url 'public:home' %}{% endif %}">
             <img src="{% static 'img/logo-varrevila.png' %}" alt="{{ INST_NOME }}" class="brand-logo">
             <span>{{ INST_NOME }}</span>
         </a>
