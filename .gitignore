@@ -39,3 +39,7 @@ coverage.xml
 .env.local
 .env.production
 *.env
+
+# Backups de banco de dados (contêm dados)
+*.dump
+*.sql
