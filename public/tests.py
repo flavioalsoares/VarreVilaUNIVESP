@@ -4,6 +4,9 @@ from decimal import Decimal
 from django.test import TestCase
 from django.urls import reverse
 
+from datetime import date
+
+from events.models import Event
 from events.tests import cria_evento
 from impact.models import ImpactReport
 from users.models import CustomUser
@@ -56,6 +59,79 @@ class IndicadoresPublicosTest(TestCase):
         contexto = self.client.get(reverse('public:home')).context
         self.assertEqual(contexto['total_lixo'], 0)
         self.assertEqual(contexto['total_sacos'], 0)
+
+
+class FiltrosDaPaginaDeAcoesTest(TestCase):
+    """
+    Marcação de que static/js/filtros.js depende.
+
+    A página é entregue completa pelo Django e continua utilizável sem
+    JavaScript — é o módulo que revela a barra de controles. Por isso os testes
+    verificam duas coisas em par: que os dados estão nos atributos, e que os
+    controles chegam escondidos.
+    """
+
+    def setUp(self):
+        for i, (bairro, ano) in enumerate([
+            ('Ermelino Matarazzo', 2024),
+            ('Guaianases', 2025),
+            ('Ermelino Matarazzo', 2025),
+        ], 1):
+            evento = cria_evento(
+                titulo=f'Mutirão {i}',
+                bairro=bairro,
+                data=date(ano, 6, 10),
+                status='realizado',
+            )
+            ImpactReport.objects.create(
+                event=evento,
+                lixo_kg=Decimal('100.00') * i,
+                numero_participantes=10 * i,
+                sacos_coletados=5 * i,
+            )
+        self.html = self.client.get(reverse('public:acoes')).content.decode()
+
+    def test_modulo_de_filtros_e_carregado(self):
+        self.assertIn('js/filtros.js', self.html)
+
+    def test_barra_de_filtros_chega_escondida(self):
+        """Controle que só funciona com JavaScript não aparece sem JavaScript."""
+        barra = re.search(r'<form[^>]*data-filtros[^>]*>', self.html)
+        self.assertIsNotNone(barra, 'a barra de filtros não foi renderizada')
+        self.assertIn('hidden', barra.group())
+
+    def test_cada_acao_carrega_os_dados_para_filtrar(self):
+        linhas = re.findall(r'<div class="acao-linha"[^>]*>', self.html, re.S)
+        self.assertEqual(len(linhas), 3)
+        for linha in linhas:
+            for atributo in ('data-titulo', 'data-bairro', 'data-local',
+                             'data-ano', 'data-data', 'data-lixo'):
+                self.assertIn(atributo, linha)
+
+    def test_dados_de_ordenacao_sao_comparaveis(self):
+        """data-data em ISO ordena por texto; data-lixo é número."""
+        self.assertIn('data-data="2024-06-10"', self.html)
+        self.assertIn('data-lixo="100.00"', self.html)
+
+    def test_lista_e_alvo_de_reordenacao_estao_marcados(self):
+        self.assertIn('data-lista-acoes', self.html)
+        self.assertIn('data-sem-resultado', self.html)
+
+    def test_controles_tem_rotulo_associado(self):
+        for identificador in ('busca-acoes', 'filtro-bairro', 'filtro-ano', 'filtro-ordem'):
+            self.assertIn(f'for="{identificador}"', self.html)
+            self.assertIn(f'id="{identificador}"', self.html)
+
+    def test_contagem_e_regiao_viva(self):
+        self.assertIn('data-contagem', self.html)
+        self.assertIn('aria-live="polite"', self.html)
+
+    def test_sem_acoes_realizadas_nao_ha_barra_de_filtros(self):
+        ImpactReport.objects.all().delete()
+        Event.objects.all().delete()
+        html = self.client.get(reverse('public:acoes')).content.decode()
+        self.assertNotIn('data-filtros', html)
+        self.assertIn('Nenhuma ação registrada ainda', html)
 
 
 class PainelInternoTest(TestCase):
@@ -204,6 +280,9 @@ class SitePublicoJavaScriptTest(TestCase):
         html = self.client.get(reverse('public:home')).content.decode()
         self.assertIn('js/navegacao.js', html)
 
-    def test_menu_nao_depende_mais_de_handler_inline(self):
-        html = self.client.get(reverse('public:home')).content.decode()
-        self.assertNotIn('onclick=', html)
+    def test_nenhuma_pagina_publica_usa_handler_inline(self):
+        """Todo comportamento vive em static/js — nada de on* na marcação."""
+        for pagina in ('public:home', 'public:sobre', 'public:acoes', 'public:contato'):
+            html = self.client.get(reverse(pagina)).content.decode()
+            achados = re.findall(r'\son[a-z]+\s*=\s*"', html)
+            self.assertEqual(achados, [], f'{pagina} tem handler inline: {achados}')

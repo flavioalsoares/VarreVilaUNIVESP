@@ -1,4 +1,5 @@
 {% extends 'public/base_publica.html' %}
+{% load static l10n %}
 
 {% block title %}Nossas Ações — {{ INST_NOME }}{% endblock %}
 
@@ -163,6 +164,27 @@
         .acao-linha-data .dia-grande { font-size: 2rem; }
     }
 </style>
+    /* ── Filtros (só aparecem com JavaScript) ── */
+    .filtros-acoes { margin-bottom: 28px; }
+    .filtros-campos { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+    .campo-filtro { display: flex; flex-direction: column; gap: 5px; }
+    .campo-filtro label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--texto-suave); }
+    .campo-filtro input, .campo-filtro select {
+        font-family: inherit; font-size: 0.92rem; padding: 9px 14px;
+        border: 1px solid var(--borda); border-radius: 100px;
+        background: #fff; color: var(--verde-escuro); min-width: 170px;
+    }
+    .campo-busca input { min-width: 260px; }
+    .btn-limpar-filtros {
+        font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+        padding: 9px 18px; border-radius: 100px;
+        border: 1px solid var(--verde-escuro); background: transparent; color: var(--verde-escuro);
+    }
+    .btn-limpar-filtros:hover { background: var(--verde-escuro); color: #fff; }
+    .filtros-contagem { margin-top: 12px; font-size: 0.88rem; color: var(--texto-suave); }
+    .sem-resultado { text-align: center; padding: 48px 20px; color: var(--texto-suave); }
+    .sem-resultado .emoji { font-size: 2.5rem; margin-bottom: 12px; }
+    .acao-linha[hidden] { display: none !important; }
 {% endblock %}
 
 {% block content %}
@@ -208,9 +230,56 @@
     <h2 class="secao-sub-titulo" style="margin-bottom:32px">Ações Realizadas</h2>
 
     {% if acoes_realizadas %}
-    <div class="acoes-lista">
+    <form class="filtros-acoes" data-filtros hidden>
+        <div class="filtros-campos">
+            <div class="campo-filtro campo-busca">
+                <label for="busca-acoes">Buscar</label>
+                <input type="search" id="busca-acoes" data-filtro="busca"
+                       placeholder="Título, bairro ou endereço" autocomplete="off">
+            </div>
+            <div class="campo-filtro">
+                <label for="filtro-bairro">Bairro</label>
+                <select id="filtro-bairro" data-filtro="bairro">
+                    <option value="">Todos os bairros</option>
+                </select>
+            </div>
+            <div class="campo-filtro">
+                <label for="filtro-ano">Ano</label>
+                <select id="filtro-ano" data-filtro="ano">
+                    <option value="">Todos os anos</option>
+                </select>
+            </div>
+            <div class="campo-filtro">
+                <label for="filtro-ordem">Ordenar por</label>
+                <select id="filtro-ordem" data-filtro="ordem">
+                    <option value="data-desc">Mais recentes</option>
+                    <option value="data-asc">Mais antigas</option>
+                    <option value="lixo-desc">Mais lixo recolhido</option>
+                </select>
+            </div>
+            <button type="button" class="btn-limpar-filtros" data-limpar-filtros hidden>
+                Limpar filtros
+            </button>
+        </div>
+        <p class="filtros-contagem" data-contagem role="status" aria-live="polite"></p>
+    </form>
+
+    <div class="sem-resultado" data-sem-resultado hidden>
+        <div class="emoji">🔍</div>
+        <h4>Nenhuma ação corresponde aos filtros</h4>
+        <p>Tente outra combinação ou limpe os filtros para ver o histórico completo.</p>
+    </div>
+
+    <div class="acoes-lista" data-lista-acoes>
         {% for acao in acoes_realizadas %}
-        <div class="acao-linha">
+        <div class="acao-linha"
+             data-acao-linha
+             data-titulo="{{ acao.titulo|lower }}"
+             data-bairro="{{ acao.bairro }}"
+             data-local="{{ acao.local|lower }}"
+             data-ano="{{ acao.data|date:'Y' }}"
+             data-data="{{ acao.data|date:'Y-m-d' }}"
+             data-lixo="{{ acao.impact_report.lixo_kg|default:0|unlocalize }}">
             <div class="acao-linha-data">
                 <div class="dia-grande">{{ acao.data|date:"d" }}</div>
                 <div class="mes-ano">{{ acao.data|date:"M Y" }}</div>
@@ -251,4 +320,8 @@
     {% endif %}
 </section>
 
+{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="{% static 'js/filtros.js' %}"></script>
 {% endblock %}
