@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  testes:
+    name: Testes automatizados
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: varrevila
+          POSTGRES_USER: varrevila_user
+          POSTGRES_PASSWORD: varrevila_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      SECRET_KEY: chave-apenas-para-execucao-de-testes
+      DEBUG: "False"
+      DB_NAME: varrevila
+      DB_USER: varrevila_user
+      DB_PASSWORD: varrevila_pass
+      DB_HOST: localhost
+      DB_PORT: "5432"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instala Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instala dependências
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Verifica configuração do Django
+        run: python manage.py check
+
+      - name: Confere se há migrations pendentes
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Roda os testes
+        run: coverage run manage.py test --verbosity 2
+
+      - name: Relatório de cobertura
+        if: always()
+        run: |
+          coverage report
+          {
+            echo "## Cobertura de testes"
+            echo ""
+            echo '```'
+            coverage report
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
