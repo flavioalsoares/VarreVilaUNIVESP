@@ -1,0 +1,5 @@
+# Dependências usadas apenas em desenvolvimento e na integração contínua.
+# Não entram na imagem de produção — o Dockerfile instala só requirements.txt.
+-r requirements.txt
+
+coverage==7.4.4
