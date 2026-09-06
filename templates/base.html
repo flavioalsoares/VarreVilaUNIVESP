@@ -51,9 +51,128 @@
             line-height: 1.5;
         }
     </style>
+    <link rel="stylesheet" href="{% static 'css/acessibilidade.css' %}">
+    <style>
+        /* ══ ALTO CONTRASTE — área interna ═════════════════════════
+           A parte comum da acessibilidade está em
+           static/css/acessibilidade.css. Aqui fica o que depende desta
+           área, que é construída sobre Bootstrap: além dos tokens
+           próprios, os componentes que trazem cor do framework.
+           ═════════════════════════════════════════════════════════ */
+        :root[data-contraste="alto"] {
+            --verde-vivo:          #0a5200;
+            --verde-vivo-suave:    #ffffff;
+            --laranja:             #8a3b00;
+            --verde-escuro:        #000000;
+            --verde-escuro-suave:  #000000;
+        }
+
+        :root[data-contraste="alto"] body { background-color: #ffffff; color: #000000; }
+
+        :root[data-contraste="alto"] .disclaimer-univesp {
+            background-color: #ffffff;
+            color: #000000;
+            border-bottom: 2px solid #000000;
+        }
+
+        /* Barra superior e menu lateral */
+        :root[data-contraste="alto"] .sidebar {
+            background-color: #ffffff;
+            border-right: 2px solid #000000;
+        }
+        :root[data-contraste="alto"] .sidebar .nav-link { color: #000000; }
+        :root[data-contraste="alto"] .sidebar .nav-link:hover,
+        :root[data-contraste="alto"] .sidebar .nav-link.active {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        /* Superfícies: o Bootstrap separa por sombra, que some no alto
+           contraste — a separação passa a ser borda sólida. */
+        :root[data-contraste="alto"] .card,
+        :root[data-contraste="alto"] .list-group-item,
+        :root[data-contraste="alto"] .dropdown-menu,
+        :root[data-contraste="alto"] .alert {
+            background-color: #ffffff;
+            color: #000000;
+            border: 2px solid #000000;
+            box-shadow: none;
+        }
+
+        /* Os dois gradientes da área interna viram preto chapado. */
+        :root[data-contraste="alto"] .stat-card,
+        :root[data-contraste="alto"] .page-header {
+            background: #000000;
+            color: #ffffff;
+            border-bottom: 4px solid #ffffff;
+        }
+
+        /* Botões: ação principal em preto, secundários vazados. */
+        :root[data-contraste="alto"] .btn-success,
+        :root[data-contraste="alto"] .bg-success {
+            background-color: #000000 !important;
+            border-color: #000000 !important;
+            color: #ffffff !important;
+        }
+        :root[data-contraste="alto"] .btn-success:hover,
+        :root[data-contraste="alto"] .btn-success:focus {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border-color: #000000 !important;
+        }
+        :root[data-contraste="alto"] .btn-outline-success,
+        :root[data-contraste="alto"] .btn-outline-secondary,
+        :root[data-contraste="alto"] .btn-outline-danger {
+            background-color: #ffffff;
+            color: #000000;
+            border: 2px solid #000000;
+        }
+        :root[data-contraste="alto"] .btn-outline-success:hover,
+        :root[data-contraste="alto"] .btn-outline-secondary:hover,
+        :root[data-contraste="alto"] .btn-outline-danger:hover {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        :root[data-contraste="alto"] .text-success,
+        :root[data-contraste="alto"] .text-muted { color: #000000 !important; }
+
+        /* Etiquetas de status. Neutralizar as cores é seguro porque o
+           status também vai escrito dentro da etiqueta — a cor nunca foi
+           o único portador da informação. */
+        :root[data-contraste="alto"] .badge,
+        :root[data-contraste="alto"] .badge-planejado,
+        :root[data-contraste="alto"] .badge-realizado,
+        :root[data-contraste="alto"] .badge-cancelado {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border: 1px solid #000000;
+        }
+
+        :root[data-contraste="alto"] .table { color: #000000; border-color: #000000; }
+        :root[data-contraste="alto"] .table > :not(caption) > * > * { border-color: #000000; }
+    </style>
+    <script src="{% static 'js/preferencias.js' %}"></script>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+<a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+
+<div class="barra-acessibilidade" data-barra-acessibilidade>
+    <div class="barra-acessibilidade-controles" role="group" aria-label="Preferências de acessibilidade">
+        <span class="barra-acessibilidade-rotulo" aria-hidden="true">Acessibilidade</span>
+        <button type="button" class="botao-preferencia" data-acao="diminuir-fonte"
+                aria-label="Diminuir o tamanho da letra">A&minus;</button>
+        <button type="button" class="botao-preferencia" data-acao="restaurar-fonte"
+                aria-label="Restaurar o tamanho padrão da letra">A</button>
+        <button type="button" class="botao-preferencia" data-acao="aumentar-fonte"
+                aria-label="Aumentar o tamanho da letra">A+</button>
+        <button type="button" class="botao-preferencia" data-acao="alternar-contraste"
+                aria-pressed="false">Alto contraste</button>
+    </div>
+    <p class="apenas-leitor-de-tela" role="status" data-aviso-preferencia></p>
+</div>
+
 <div class="disclaimer-univesp">
     &#9888; <strong>Projeto Acadêmico</strong><br>
     Desenvolvido por alunos da disciplina<br>
@@ -136,9 +255,9 @@
                 {% endif %}
             </div>
         </nav>
-        <main class="col-md-10 py-4 px-4">
+        <main id="conteudo" tabindex="-1" class="col-md-10 py-4 px-4">
         {% else %}
-        <main class="col-12 py-4 px-4">
+        <main id="conteudo" tabindex="-1" class="col-12 py-4 px-4">
         {% endif %}
 
             {% if messages %}

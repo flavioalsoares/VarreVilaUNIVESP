@@ -139,6 +139,65 @@ class AcessibilidadeTest(TestCase):
             self.assertIn('<script src="/static/js/preferencias.js">', html)
 
 
+class AcessibilidadeNaAreaInternaTest(TestCase):
+    """
+    A mesma camada vale para quem opera o sistema, não só para quem visita.
+
+    A área interna estende base.html e é construída sobre Bootstrap, então o
+    alto contraste precisa alcançar os componentes do framework — cards,
+    etiquetas de status, botões e tabelas — além dos tokens próprios.
+    """
+
+    def setUp(self):
+        CustomUser.objects.create_user(username='operador', password='senha-de-teste')
+
+    def paginas_internas(self):
+        yield 'login (anônimo)', self.client.get(reverse('users:login'))
+        self.client.login(username='operador', password='senha-de-teste')
+        for nome in ('dashboard:index', 'events:lista', 'impact:lista', 'users:perfil'):
+            yield nome, self.client.get(reverse(nome))
+
+    def test_todas_as_telas_internas_trazem_a_barra(self):
+        for nome, resposta in self.paginas_internas():
+            with self.subTest(pagina=nome):
+                self.assertEqual(resposta.status_code, 200)
+                self.assertIn('data-barra-acessibilidade', resposta.content.decode())
+
+    def test_todas_as_telas_internas_trazem_o_atalho_e_o_alvo(self):
+        for nome, resposta in self.paginas_internas():
+            with self.subTest(pagina=nome):
+                html = resposta.content.decode()
+                self.assertIn('class="pular-conteudo"', html)
+                self.assertIn('id="conteudo"', html)
+
+    def test_login_carrega_o_modulo_de_preferencias(self):
+        """A tela que motivou estender a acessibilidade à área interna."""
+        html = self.client.get(reverse('users:login')).content.decode()
+        self.assertIn('<script src="/static/js/preferencias.js">', html)
+
+    def test_area_interna_declara_o_alto_contraste(self):
+        html = self.client.get(reverse('users:login')).content.decode()
+        self.assertIn('data-contraste="alto"', html)
+
+    def test_o_alvo_do_atalho_aparece_uma_vez_so(self):
+        """base.html tem dois <main> num if/else — só um pode renderizar."""
+        self.client.login(username='operador', password='senha-de-teste')
+        html = self.client.get(reverse('dashboard:index')).content.decode()
+        self.assertEqual(html.count('id="conteudo"'), 1)
+
+
+class FolhaDeAcessibilidadeCompartilhadaTest(TestCase):
+    """As duas áreas consomem a mesma folha, para não duplicar as regras."""
+
+    def test_site_publico_carrega_a_folha(self):
+        html = self.client.get(reverse('public:home')).content.decode()
+        self.assertIn('css/acessibilidade.css', html)
+
+    def test_area_interna_carrega_a_folha(self):
+        html = self.client.get(reverse('users:login')).content.decode()
+        self.assertIn('css/acessibilidade.css', html)
+
+
 class SitePublicoJavaScriptTest(TestCase):
 
     def test_paginas_publicas_referenciam_o_modulo_de_navegacao(self):
