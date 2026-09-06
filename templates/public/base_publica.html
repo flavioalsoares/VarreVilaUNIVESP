@@ -278,112 +278,14 @@
             line-height: 1.5;
         }
     </style>
+    <link rel="stylesheet" href="{% static 'css/acessibilidade.css' %}">
     <style>
-        /* ══ ACESSIBILIDADE ═══════════════════════════════════════════
-           Escala de letra e alto contraste. O estado vem de dois atributos
-           em <html>, escritos por static/js/preferencias.js. Todo o efeito
-           visual mora aqui: sem JavaScript, a página fica no padrão — que
-           continua legível e utilizável.
-           ═══════════════════════════════════════════════════════════ */
-
-        /* Escala — o site inteiro dimensiona em rem, então basta a raiz. */
-        :root { font-size: 100%; }
-        :root[data-fonte="grande"] { font-size: 112.5%; }
-        :root[data-fonte="maior"]  { font-size: 125%; }
-
-        /* Foco sempre visível, para quem navega por teclado. */
-        a:focus-visible,
-        button:focus-visible,
-        input:focus-visible,
-        textarea:focus-visible,
-        select:focus-visible {
-            outline: 3px solid var(--laranja);
-            outline-offset: 2px;
-            border-radius: 4px;
-        }
-
-        /* Conteúdo só para leitor de tela. */
-        .apenas-leitor-de-tela {
-            position: absolute;
-            width: 1px; height: 1px;
-            padding: 0; margin: -1px;
-            overflow: hidden;
-            clip: rect(0 0 0 0);
-            white-space: nowrap;
-            border: 0;
-        }
-
-        /* Atalho para pular a navegação repetida. */
-        .pular-conteudo {
-            position: absolute;
-            left: 8px; top: -60px;
-            z-index: 2000;
-            background: var(--verde-escuro);
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 0 0 8px 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: top 0.15s;
-        }
-        .pular-conteudo:focus { top: 0; }
-
-        /* ── Barra de preferências ── */
-        .barra-acessibilidade {
-            background: var(--verde-escuro);
-            padding: 6px 5%;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .barra-acessibilidade-controles {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .barra-acessibilidade-rotulo {
-            color: rgba(255,255,255,0.75);
-            font-size: 0.72rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            margin-right: 4px;
-        }
-
-        .botao-preferencia {
-            background: transparent;
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.45);
-            border-radius: 100px;
-            padding: 3px 12px;
-            font-family: inherit;
-            font-size: 0.78rem;
-            font-weight: 600;
-            line-height: 1.5;
-            cursor: pointer;
-            transition: background 0.15s, color 0.15s;
-        }
-
-        .botao-preferencia:hover:not(:disabled) {
-            background: #fff;
-            color: var(--verde-escuro);
-        }
-
-        .botao-preferencia:disabled {
-            opacity: 0.4;
-            cursor: default;
-        }
-
-        .botao-preferencia[aria-pressed="true"] {
-            background: var(--verde-vivo);
-            color: var(--verde-escuro);
-            border-color: var(--verde-vivo);
-        }
-
-        /* ── Alto contraste ──
-           Primeiro os tokens; depois as poucas regras que trazem cor
-           embutida e não seguiriam a troca. */
+        /* ══ ALTO CONTRASTE — site público ═════════════════════════
+           A parte comum da acessibilidade está em
+           static/css/acessibilidade.css. Aqui fica só o que depende
+           da paleta desta área: os nove tokens e as poucas regras
+           que trazem cor embutida e não seguiriam a troca.
+           ═════════════════════════════════════════════════════════ */
         :root[data-contraste="alto"] {
             --verde-escuro: #000000;
             --verde-medio:  #0a5200;
@@ -408,9 +310,9 @@
             border-bottom: 2px solid #000000;
         }
 
-        /* Nos estados de hover o tema claro escurece o fundo e escurece o
-           texto junto. Em alto contraste isso ficaria preto sobre verde
-           escuro, então a inversão passa a ser branco sobre preto. */
+        /* Nos estados de hover o tema claro escurece o fundo e escurece
+           o texto junto. Em alto contraste isso ficaria preto sobre
+           verde escuro, então a inversão passa a ser branco sobre preto. */
         :root[data-contraste="alto"] .nav-links a:hover,
         :root[data-contraste="alto"] .btn-secundario:hover {
             background: #000000;
@@ -431,8 +333,8 @@
             border-color: #000000;
         }
 
-        /* O rodapé fica preto pela troca de token; os brancos transparentes
-           precisam virar opacos para manter a leitura. */
+        /* O rodapé fica preto pela troca de token; os brancos
+           transparentes precisam virar opacos para manter a leitura. */
         :root[data-contraste="alto"] footer,
         :root[data-contraste="alto"] .footer-brand p,
         :root[data-contraste="alto"] .footer-col ul li a,
@@ -442,15 +344,6 @@
         }
 
         :root[data-contraste="alto"] .footer-bottom a { text-decoration: underline; }
-
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-                scroll-behavior: auto !important;
-            }
-        }
     </style>
     <script src="{% static 'js/preferencias.js' %}"></script>
     {% block extra_css %}{% endblock %}
