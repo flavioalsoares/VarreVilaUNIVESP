@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from events.tests import cria_evento
 from impact.models import ImpactReport
+from users.models import CustomUser
 
 
 class PaginasPublicasTest(TestCase):
@@ -62,3 +63,28 @@ class PainelInternoTest(TestCase):
         resposta = self.client.get(reverse('dashboard:index'))
         self.assertEqual(resposta.status_code, 302)
         self.assertIn(reverse('users:login'), resposta.url)
+
+    def test_dashboard_renderiza_para_usuario_autenticado(self):
+        CustomUser.objects.create_user(username='logado', password='senha-de-teste')
+        self.client.login(username='logado', password='senha-de-teste')
+        resposta = self.client.get(reverse('dashboard:index'))
+        self.assertEqual(resposta.status_code, 200)
+
+    def test_dashboard_referencia_os_modulos_de_javascript(self):
+        """Guarda a extração do JS inline: os módulos precisam continuar sendo servidos."""
+        CustomUser.objects.create_user(username='logado', password='senha-de-teste')
+        self.client.login(username='logado', password='senha-de-teste')
+        html = self.client.get(reverse('dashboard:index')).content.decode()
+        self.assertIn('js/grafico-mensal.js', html)
+        self.assertIn('js/mapa-eventos.js', html)
+
+
+class SitePublicoJavaScriptTest(TestCase):
+
+    def test_paginas_publicas_referenciam_o_modulo_de_navegacao(self):
+        html = self.client.get(reverse('public:home')).content.decode()
+        self.assertIn('js/navegacao.js', html)
+
+    def test_menu_nao_depende_mais_de_handler_inline(self):
+        html = self.client.get(reverse('public:home')).content.decode()
+        self.assertNotIn('onclick=', html)

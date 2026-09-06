@@ -311,7 +311,7 @@
         </li>
     </ul>
 
-    <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <button class="hamburger" id="hamburger" type="button" aria-label="Abrir menu de navegação">
         <i class="bi bi-list"></i>
     </button>
 </nav>
@@ -357,20 +357,7 @@
     </div>
 </footer>
 
-<script>
-    // Navbar scroll
-    window.addEventListener('scroll', () => {
-        document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
-    });
-
-    // Mobile menu
-    function toggleMenu() {
-        const links = document.getElementById('navLinks');
-        const icon = document.querySelector('.hamburger i');
-        links.classList.toggle('aberto');
-        icon.className = links.classList.contains('aberto') ? 'bi bi-x' : 'bi bi-list';
-    }
-</script>
+<script type="module" src="{% static 'js/navegacao.js' %}"></script>
 
 {% block extra_js %}{% endblock %}
 </body>
