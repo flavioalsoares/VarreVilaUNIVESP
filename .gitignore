@@ -43,3 +43,4 @@ coverage.xml
 # Backups de banco de dados (contêm dados)
 *.dump
 *.sql
+.env.example
