@@ -26,7 +26,7 @@
         .btn-success:hover, .btn-success:focus { background-color: #94ba30; border-color: #94ba30; color: var(--verde-escuro); }
         .btn-outline-success { color: var(--verde-escuro); border-color: var(--verde-vivo); }
         .btn-outline-success:hover, .btn-outline-success:focus { background-color: var(--verde-vivo); border-color: var(--verde-vivo); color: var(--verde-escuro); }
-        .text-success { color: var(--laranja) !important; }
+        .text-success { color: #9c4511 !important; }   /* laranja de texto: 5,3:1 sobre branco */
         .bg-success { background-color: var(--verde-vivo) !important; color: var(--verde-escuro) !important; }
         .card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px; }
         .stat-card { background: linear-gradient(135deg, var(--verde-escuro), var(--verde-escuro-suave)); color: white; border-bottom: 4px solid var(--verde-vivo); }
@@ -168,10 +168,11 @@
 <nav class="navbar navbar-dark navbar-expand-lg">
     <div class="container-fluid">
         <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'dashboard:index' %}{% else %}{% url 'public:home' %}{% endif %}">
-            <img src="{% static 'img/logo-varrevila.png' %}" alt="{{ INST_NOME }}" class="brand-logo">
+            <img src="{% static 'img/logo-varrevila.png' %}" alt="" class="brand-logo">
             <span>{{ INST_NOME }}</span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Abrir menu de navegação">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">

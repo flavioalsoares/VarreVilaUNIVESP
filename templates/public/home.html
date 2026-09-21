@@ -180,7 +180,7 @@
 
     .numero-unidade {
         font-size: 1rem;
-        color: var(--verde-vivo);
+        color: var(--verde-texto);
         font-weight: 600;
     }
 
@@ -440,7 +440,7 @@
 
     <div class="hero-visual">
         <div class="hero-card-principal">
-            <h3>Nosso Impacto Real</h3>
+            <h2>Nosso Impacto Real</h2>
 
             <div class="stat-linha">
                 <span class="label">Mutirões realizados</span>
@@ -564,7 +564,7 @@
                 <div class="mes">{{ evento.data|date:"M" }}</div>
             </div>
             <div class="proximo-info">
-                <h4>{{ evento.titulo }}</h4>
+                <h3>{{ evento.titulo }}</h3>
                 <p><i class="bi bi-geo-alt"></i> {{ evento.bairro }} &nbsp;·&nbsp; <i class="bi bi-clock"></i> {{ evento.horario|default:"Horário a confirmar" }} &nbsp;·&nbsp; <i class="bi bi-people"></i> {{ evento.vagas_disponiveis }} vagas</p>
             </div>
             <a href="{% url 'users:login' %}" class="btn-inscrever">Inscrever-se</a>

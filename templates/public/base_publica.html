@@ -16,6 +16,7 @@
             --verde-medio: #7fa327;
             --verde-vivo: #a6ce39;
             --verde-claro: #cce88a;
+            --verde-texto: #5f7d1d;   /* verde para texto pequeno: 5,4:1 sobre a areia */
             --laranja: #e17b38;
             --areia: #f7f8f1;
             --texto-suave: #5a5a5a;
@@ -167,7 +168,7 @@
             color: rgba(255,255,255,0.65);
         }
 
-        .footer-col h4 {
+        .footer-col h3 {
             font-size: 0.75rem;
             letter-spacing: 0.12em;
             text-transform: uppercase;
@@ -193,12 +194,13 @@
             justify-content: space-between;
             align-items: center;
             font-size: 0.8rem;
-            color: rgba(255,255,255,0.4);
+            color: rgba(255,255,255,0.72);
         }
 
         .footer-bottom a {
             color: var(--verde-claro);
-            text-decoration: none;
+            text-decoration: underline;
+            text-underline-offset: 2px;
         }
 
         /* ── UTILITÁRIOS ── */
@@ -291,6 +293,7 @@
             --verde-medio:  #0a5200;
             --verde-vivo:   #0a5200;
             --verde-claro:  #ffffff;
+            --verde-texto:  #000000;
             --laranja:      #8a3b00;
             --areia:        #ffffff;
             --page-tint:    #ffffff;
@@ -403,7 +406,7 @@
             <p>Iniciativa popular de mobilização comunitária para limpeza urbana e educação ambiental em bairros periféricos de São Paulo.</p>
         </div>
         <div class="footer-col">
-            <h4>Navegação</h4>
+            <h3>Navegação</h3>
             <ul>
                 <li><a href="{% url 'public:home' %}">Início</a></li>
                 <li><a href="{% url 'public:sobre' %}">O Projeto</a></li>
@@ -412,7 +415,7 @@
             </ul>
         </div>
         <div class="footer-col">
-            <h4>Saiba mais</h4>
+            <h3>Saiba mais</h3>
             <ul>
                 <li><a href="{{ INST_FACEBOOK }}" target="_blank">Facebook</a></li>
                 <li><a href="https://passandoalimpo.nossasaopaulo.org.br/noticia/conheca_o_varre_vila_iniciativa_popular_de_limpeza_urbana_em_sao_paulo" target="_blank">Nossas São Paulo</a></li>

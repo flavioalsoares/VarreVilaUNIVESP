@@ -10,10 +10,10 @@
             <div class="text-center mb-4">
                 {% load static %}
                 <img src="{% static 'img/logo-varrevila.png' %}" alt="{{ INST_NOME }}" class="auth-logo mb-3">
-                <h3 class="fw-bold" style="color:var(--verde-escuro)">{{ INST_NOME }}</h3>
+                <p class="fw-bold fs-4 mb-1" style="color:var(--verde-escuro)">{{ INST_NOME }}</p>
                 <p class="text-muted">{{ INST_SLOGAN }}</p>
             </div>
-            <h5 class="mb-3">Entrar no sistema</h5>
+            <h1 class="h5 mb-3">Entrar no sistema</h1>
             {% crispy form %}
             <hr>
             <div class="text-center">
