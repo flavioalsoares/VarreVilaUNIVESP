@@ -126,12 +126,61 @@ class FiltrosDaPaginaDeAcoesTest(TestCase):
         self.assertIn('data-contagem', self.html)
         self.assertIn('aria-live="polite"', self.html)
 
+    def test_cada_acao_carrega_o_id_para_o_mapa_sincronizar(self):
+        for linha in re.findall(r'<div class="acao-linha"[^>]*>', self.html, re.S):
+            self.assertRegex(linha, r'data-id="\d+"')
+
     def test_sem_acoes_realizadas_nao_ha_barra_de_filtros(self):
         ImpactReport.objects.all().delete()
         Event.objects.all().delete()
         html = self.client.get(reverse('public:acoes')).content.decode()
         self.assertNotIn('data-filtros', html)
         self.assertIn('Nenhuma ação registrada ainda', html)
+
+
+class MapaPublicoTest(TestCase):
+    """
+    O mapa público é a tela renderizada no cliente a partir da API. O Django
+    entrega só o contêiner — escondido — e a descrição para leitor de tela.
+    """
+
+    def setUp(self):
+        evento = cria_evento(titulo='Com mapa', status='realizado')
+        ImpactReport.objects.create(event=evento, lixo_kg=Decimal('10.00'), numero_participantes=2)
+        self.html = self.client.get(reverse('public:acoes')).content.decode()
+
+    def test_modulo_e_carregado_depois_do_leaflet(self):
+        """O módulo usa o global L — o Leaflet precisa vir antes no HTML."""
+        self.assertIn('js/mapa-publico.js', self.html)
+        self.assertLess(self.html.index('leaflet.js'), self.html.index('js/mapa-publico.js'))
+
+    def test_folha_do_leaflet_e_carregada(self):
+        self.assertIn('leaflet.css', self.html)
+
+    def test_conteiner_chega_escondido(self):
+        """Sem JavaScript não há mapa — e não deve haver um retângulo vazio."""
+        conteiner = re.search(r'<div[^>]*data-mapa-publico[^>]*>', self.html)
+        self.assertIsNotNone(conteiner)
+        self.assertIn('hidden', conteiner.group())
+
+    def test_area_do_mapa_e_uma_regiao_descrita(self):
+        area = re.search(r'<div id="mapa-publico"[^>]*>', self.html)
+        self.assertIsNotNone(area)
+        self.assertIn('role="region"', area.group())
+        self.assertIn('aria-labelledby="mapa-publico-titulo"', area.group())
+        self.assertIn('aria-describedby="mapa-publico-descricao"', area.group())
+        self.assertIn('id="mapa-publico-descricao"', self.html)
+
+    def test_legenda_e_regiao_viva(self):
+        legenda = re.search(r'<p[^>]*data-mapa-legenda[^>]*>', self.html)
+        self.assertIsNotNone(legenda)
+        self.assertIn('aria-live="polite"', legenda.group())
+
+    def test_sem_acoes_realizadas_nao_ha_mapa(self):
+        ImpactReport.objects.all().delete()
+        Event.objects.all().delete()
+        html = self.client.get(reverse('public:acoes')).content.decode()
+        self.assertNotIn('data-mapa-publico', html)
 
 
 class PainelInternoTest(TestCase):

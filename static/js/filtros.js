@@ -49,6 +49,7 @@ function iniciar(barra, lista) {
        sem nenhuma ida ao servidor. */
     const acoes = Array.from(lista.querySelectorAll('[data-acao-linha]')).map((elemento) => ({
         elemento,
+        id: Number.parseInt(elemento.dataset.id, 10),
         titulo: elemento.dataset.titulo || '',
         bairro: elemento.dataset.bairro || '',
         local: elemento.dataset.local || '',
@@ -148,7 +149,8 @@ function iniciar(barra, lista) {
                 visiveis: visiveis.length,
                 total: acoes.length,
                 filtros: Object.assign({}, estado),
-                datas: visiveis.map((acao) => acao.data),
+                ids: visiveis.map((acao) => acao.id),
+                filtrando,
             },
         }));
     }

@@ -101,6 +101,14 @@ class ListagemDeEventosTest(APITestCase):
         evento = next(e for e in self.client.get(self.url).data['results'] if e['titulo'] == 'Limpeza C')
         self.assertEqual(evento['vagas_disponiveis'], self.c.vagas - 3)
 
+    def test_cliente_pode_pedir_paginas_maiores_ate_o_teto(self):
+        """O mapa público carrega todos os eventos de uma vez."""
+        for i in range(25):
+            cria_evento(titulo=f'Extra {i}')
+        self.assertEqual(len(self.client.get(self.url).data['results']), 20)
+        self.assertEqual(len(self.client.get(self.url, {'page_size': 100}).data['results']), 28)
+        self.assertEqual(len(self.client.get(self.url, {'page_size': 9999}).data['results']), 28)
+
     def test_listagem_nao_gera_uma_consulta_por_evento(self):
         """A anotação de inscritos e o select_related evitam o N+1."""
         for i in range(10):
