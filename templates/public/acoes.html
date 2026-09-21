@@ -4,6 +4,7 @@
 {% block title %}Nossas Ações — {{ INST_NOME }}{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
     :root { --page-tint: #dfe9c4; }
 
@@ -185,6 +186,21 @@
     .sem-resultado { text-align: center; padding: 48px 20px; color: var(--texto-suave); }
     .sem-resultado .emoji { font-size: 2.5rem; margin-bottom: 12px; }
     .acao-linha[hidden] { display: none !important; }
+
+    /* ── Mapa (só aparece com JavaScript) ── */
+    .mapa-publico { margin-bottom: 32px; }
+    .mapa-publico-cabecalho { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 12px; }
+    .mapa-publico-cabecalho h3 { font-family: 'Playfair Display', serif; font-size: 1.3rem; }
+    .mapa-publico-legenda { font-size: 0.85rem; color: var(--texto-suave); }
+    .mapa-publico-area { height: 380px; border-radius: 16px; border: 1px solid var(--borda); overflow: hidden; background: var(--areia); }
+    .mapa-publico-aviso { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--texto-suave); padding: 20px; text-align: center; }
+    .marcador-mutirao { width: 18px; height: 18px; border-radius: 50%; background: var(--verde-medio); border: 3px solid #fff; box-shadow: 0 1px 6px rgba(0,0,0,0.35); }
+    .marcador-mutirao.oculto { display: none; }
+    .leaflet-marker-icon:focus-visible { outline: 3px solid var(--laranja); outline-offset: 3px; border-radius: 50%; }
+    .leaflet-popup-content { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; line-height: 1.5; }
+    .leaflet-popup-content strong { font-size: 1rem; }
+    :root[data-contraste="alto"] .marcador-mutirao { background: #000; border-color: #fff; }
+    :root[data-contraste="alto"] .mapa-publico-area { border: 2px solid #000; }
 {% endblock %}
 
 {% block content %}
@@ -230,6 +246,20 @@
     <h2 class="secao-sub-titulo" style="margin-bottom:32px">Ações Realizadas</h2>
 
     {% if acoes_realizadas %}
+    <div class="mapa-publico" data-mapa-publico hidden>
+        <div class="mapa-publico-cabecalho">
+            <h3 id="mapa-publico-titulo">Onde já estivemos</h3>
+            <p class="mapa-publico-legenda" data-mapa-legenda aria-live="polite"></p>
+        </div>
+        <div id="mapa-publico" class="mapa-publico-area" role="region"
+             aria-labelledby="mapa-publico-titulo"
+             aria-describedby="mapa-publico-descricao"></div>
+        <p id="mapa-publico-descricao" class="apenas-leitor-de-tela">
+            Mapa com um marcador por mutirão realizado. Os marcadores podem ser percorridos
+            com a tecla Tab; Enter abre os detalhes. A lista abaixo traz as mesmas ações.
+        </p>
+    </div>
+
     <form class="filtros-acoes" data-filtros hidden>
         <div class="filtros-campos">
             <div class="campo-filtro campo-busca">
@@ -274,6 +304,7 @@
         {% for acao in acoes_realizadas %}
         <div class="acao-linha"
              data-acao-linha
+             data-id="{{ acao.id }}"
              data-titulo="{{ acao.titulo|lower }}"
              data-bairro="{{ acao.bairro }}"
              data-local="{{ acao.local|lower }}"
@@ -323,5 +354,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module" src="{% static 'js/filtros.js' %}"></script>
+<script type="module" src="{% static 'js/mapa-publico.js' %}"></script>
 {% endblock %}

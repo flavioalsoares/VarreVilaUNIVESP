@@ -25,6 +25,7 @@ PARAMETROS_DE_EVENTOS = [
     OpenApiParameter('ano', int, description='Ano do evento, ex. 2025'),
     OpenApiParameter('search', str, description='Busca em título, bairro e local'),
     OpenApiParameter('ordering', str, description='data, -data, titulo ou -titulo (padrão: -data)'),
+    OpenApiParameter('page_size', int, description='Itens por página, até 200 (padrão: 20)'),
 ]
 
 
