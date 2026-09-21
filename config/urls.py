@@ -10,4 +10,5 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('events/', include('events.urls')),
     path('impact/', include('impact.urls')),
+    path('api/v1/', include('api.urls')),      # API pública, somente leitura
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

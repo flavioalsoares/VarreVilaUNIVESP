@@ -18,6 +18,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'crispy_forms',
     'crispy_bootstrap5',
+    'rest_framework',
+    'drf_spectacular',
+    'api',
     'users',
     'events',
     'impact',
@@ -117,3 +120,37 @@ INSTITUICAO_ANO_FUNDACAO = os.environ.get('INSTITUICAO_ANO_FUNDACAO', '2018')
 INSTITUICAO_APROVA_1 = os.environ.get('INSTITUICAO_APROVA_1', 'Fiocruz')
 INSTITUICAO_APROVA_2 = os.environ.get('INSTITUICAO_APROVA_2', 'Prefeitura de São Paulo')
 INSTITUICAO_APROVA_3 = os.environ.get('INSTITUICAO_APROVA_3', 'SESC SP')
+
+# ─────────────────────────────────────────────
+#  API PÚBLICA (Django REST Framework)
+#  Somente leitura e aberta a qualquer origem
+#  do mesmo domínio: alimenta o mapa e os
+#  filtros do site público. Não expõe dados de
+#  voluntários. Documentação em /api/v1/docs/.
+# ─────────────────────────────────────────────
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': ['rest_framework.throttling.AnonRateThrottle'],
+    'DEFAULT_THROTTLE_RATES': {'anon': os.environ.get('API_LIMITE_ANONIMO', '300/hour')},
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # Latitude, longitude e quilos chegam ao JavaScript como número, não string.
+    'COERCE_DECIMAL_TO_STRING': False,
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': f'API {INSTITUICAO_NOME}',
+    'DESCRIPTION': (
+        'Dados públicos dos mutirões de limpeza urbana e do impacto ambiental '
+        'registrado. Somente leitura. Alimenta o mapa e os filtros do site.'
+    ),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+}
