@@ -11,8 +11,20 @@
      --verde-vivo     verde de destaque
 
    O estado das preferências chega em atributos de <html>, escritos por
-   static/js/preferencias.js. Sem JavaScript nada aqui se ativa e a
-   página permanece no padrão, que continua legível e utilizável.
+   static/js/preferencias.js:
+
+     data-fonte="normal|grande|maior"     escala da letra
+     data-contraste="alto"                alto contraste (por área)
+     data-espacamento="amplo"             entrelinha e espaço entre letras
+     data-links="destacados"              todo link sublinhado e contornado
+     data-fonte-legivel="sim"             Atkinson Hyperlegible
+     data-cinza="sim"                     escala de cinza
+     data-cursor="grande"                 cursor ampliado
+     data-movimento="reduzido"            pausa animações e transições
+     data-guia="sim"                      faixa de leitura que segue o mouse
+
+   Sem JavaScript nenhum atributo é escrito e a página permanece no
+   padrão, que continua legível e utilizável.
    ══════════════════════════════════════════════════════════════════ */
 
 /* ── Escala da letra ──
@@ -63,46 +75,238 @@ select:focus-visible,
 
 .pular-conteudo:focus { top: 0; }
 
-/* ── Barra de preferências ── */
-.barra-acessibilidade {
-    background: var(--verde-escuro);
-    padding: 6px 5%;
-    display: flex;
-    justify-content: flex-end;
+/* ── Movimento reduzido: pela preferência do sistema ou pelo painel ── */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
-.barra-acessibilidade-controles {
+:root[data-movimento="reduzido"] *,
+:root[data-movimento="reduzido"] *::before,
+:root[data-movimento="reduzido"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}
+
+/* ── Espaçamento de texto ──
+   Entrelinha, espaço entre letras e entre palavras mais largos. É a
+   medida que mais ajuda na dislexia, segundo o critério 1.4.12 da WCAG. */
+:root[data-espacamento="amplo"] body {
+    line-height: 1.8;
+    letter-spacing: 0.06em;
+    word-spacing: 0.14em;
+}
+
+:root[data-espacamento="amplo"] p,
+:root[data-espacamento="amplo"] li {
+    margin-bottom: 0.9em;
+}
+
+/* ── Links destacados ──
+   O site diferencia link só pela cor. Aqui todo link ganha sublinhado
+   e contorno, e deixa de depender de percepção de cor. */
+:root[data-links="destacados"] a {
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 3px;
+    outline: 1px solid currentColor;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* ── Fonte de leitura facilitada ──
+   Atkinson Hyperlegible, desenhada para baixa visão: cada letra tem
+   forma inconfundível (I, l e 1 não se parecem). O arquivo da fonte só
+   é carregado quando a opção é ligada — preferencias.js injeta o link. */
+:root[data-fonte-legivel="sim"] body,
+:root[data-fonte-legivel="sim"] h1,
+:root[data-fonte-legivel="sim"] h2,
+:root[data-fonte-legivel="sim"] h3,
+:root[data-fonte-legivel="sim"] h4,
+:root[data-fonte-legivel="sim"] button,
+:root[data-fonte-legivel="sim"] input,
+:root[data-fonte-legivel="sim"] select,
+:root[data-fonte-legivel="sim"] textarea {
+    font-family: 'Atkinson Hyperlegible', 'DM Sans', system-ui, sans-serif !important;
+}
+
+/* ── Escala de cinza ──
+   Para daltonismo e fotossensibilidade. Aplicado na raiz para alcançar
+   também o que está fora de <body>, como o painel e o VLibras. */
+:root[data-cinza="sim"] {
+    filter: grayscale(1);
+}
+
+/* ── Cursor ampliado ──
+   Seta de 40px em SVG embutido; o navegador cai no cursor padrão se não
+   conseguir usar a imagem. */
+:root[data-cursor="grande"],
+:root[data-cursor="grande"] * {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><path d='M6 3 L6 33 L14 25 L20 37 L25 35 L19 23 L30 23 Z' fill='%23000' stroke='%23fff' stroke-width='2.5' stroke-linejoin='round'/></svg>") 6 3, auto !important;
+}
+
+:root[data-cursor="grande"] a,
+:root[data-cursor="grande"] button,
+:root[data-cursor="grande"] [role="button"],
+:root[data-cursor="grande"] select,
+:root[data-cursor="grande"] label {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><path d='M14 3 C11 3 10 5 10 7 L10 20 L8 18 C6 16 3 17 3 20 L11 33 C12 35 14 37 18 37 L26 37 C30 37 33 34 33 30 L33 17 C33 15 31 14 30 14 C29 14 28 14 27 15 C27 13 25 12 23 12 C22 12 21 12 20 13 C20 11 18 10 17 10 L17 7 C17 5 16 3 14 3 Z' fill='%23000' stroke='%23fff' stroke-width='2.5' stroke-linejoin='round'/></svg>") 14 3, pointer !important;
+}
+
+/* ── Guia de leitura ──
+   Faixa que acompanha o mouse. Criada e movida por guia-de-leitura.js;
+   aqui só a aparência. */
+.guia-de-leitura {
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 44px;
+    margin-top: -22px;
+    background: rgba(255, 220, 0, 0.16);
+    border-top: 2px solid rgba(0, 0, 0, 0.55);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+    z-index: 1900;
+}
+
+:root[data-contraste="alto"] .guia-de-leitura {
+    background: rgba(255, 255, 0, 0.35);
+    border-color: #000;
+}
+
+/* ── Painel de acessibilidade ──
+   Botão fixo no canto abre um painel com todas as opções. O botão fica
+   à esquerda para não disputar o canto direito com o VLibras. */
+.acessibilidade-abrir {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    z-index: 1950;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: var(--verde-escuro);
+    color: #fff;
+    font-size: 1.6rem;
     display: flex;
     align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
-.barra-acessibilidade-rotulo {
-    color: rgba(255, 255, 255, 0.75);
-    font-size: 0.72rem;
+.acessibilidade-abrir:hover { background: var(--verde-vivo); color: var(--verde-escuro); }
+
+.acessibilidade-painel {
+    position: fixed;
+    left: 16px;
+    bottom: 84px;
+    z-index: 1950;
+    width: min(340px, calc(100vw - 32px));
+    max-height: calc(100vh - 110px);
+    overflow-y: auto;
+    background: #fff;
+    color: var(--verde-escuro);
+    border: 1px solid var(--borda, #dde4cd);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+    padding: 18px 18px 14px;
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
+:root[data-contraste="alto"] .acessibilidade-painel {
+    border: 2px solid #000;
+    box-shadow: none;
+}
+
+.acessibilidade-cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.acessibilidade-cabecalho h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.acessibilidade-fechar {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    color: inherit;
+}
+
+.acessibilidade-fechar:hover { border-color: currentColor; }
+
+.acessibilidade-grupo {
+    border: 0;
+    padding: 0;
+    margin: 0 0 14px;
+}
+
+.acessibilidade-grupo legend {
+    font-size: 0.7rem;
+    font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    margin-right: 4px;
+    color: var(--texto-suave, #5a5a5a);
+    margin-bottom: 8px;
+    padding: 0;
+}
+
+.acessibilidade-linha {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.acessibilidade-opcoes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
 }
 
 .botao-preferencia {
-    background: transparent;
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    border-radius: 100px;
-    padding: 3px 12px;
+    background: #fff;
+    color: var(--verde-escuro);
+    border: 1px solid var(--borda, #dde4cd);
+    border-radius: 10px;
+    padding: 8px 10px;
     font-family: inherit;
-    font-size: 0.78rem;
+    font-size: 0.84rem;
     font-weight: 600;
-    line-height: 1.5;
+    line-height: 1.3;
     cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     transition: background 0.15s, color 0.15s;
 }
 
+.botao-preferencia i { font-size: 1.05em; flex: 0 0 auto; }
+
 .botao-preferencia:hover:not(:disabled) {
-    background: #fff;
-    color: var(--verde-escuro);
+    background: var(--verde-escuro);
+    color: #fff;
 }
 
 .botao-preferencia:disabled {
@@ -116,14 +320,52 @@ select:focus-visible,
     border-color: var(--verde-vivo);
 }
 
-/* ── Movimento reduzido, respeitando a preferência do sistema ── */
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
+:root[data-contraste="alto"] .botao-preferencia {
+    border: 2px solid #000;
+}
+
+:root[data-contraste="alto"] .botao-preferencia[aria-pressed="true"] {
+    background: #000;
+    color: #fff;
+}
+
+.acessibilidade-rodape {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid var(--borda, #dde4cd);
+    padding-top: 12px;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--texto-suave, #5a5a5a);
+}
+
+.acessibilidade-rodape kbd {
+    font-family: inherit;
+    font-size: 0.72rem;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+
+.acessibilidade-restaurar {
+    background: transparent;
+    border: 1px solid currentColor;
+    border-radius: 100px;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.acessibilidade-restaurar:hover { background: var(--verde-escuro); color: #fff; border-color: var(--verde-escuro); }
+
+.acessibilidade-dica {
+    margin: 8px 0 0;
+    font-size: 0.78rem;
+    color: var(--texto-suave, #5a5a5a);
 }

@@ -1,0 +1,80 @@
+{# Painel de acessibilidade — incluído por base.html e base_publica.html.  #}
+{# O comportamento está em static/js/preferencias.js (estado e painel),   #}
+{# leitura.js (voz alta) e guia-de-leitura.js (faixa). Sem JavaScript o    #}
+{# botão de abrir não faz nada, por isso o painel nasce com hidden.        #}
+<div class="acessibilidade" data-painel-acessibilidade>
+    <button type="button" class="acessibilidade-abrir" data-abrir-painel
+            aria-expanded="false" aria-controls="painel-acessibilidade"
+            aria-label="Abrir opções de acessibilidade" title="Acessibilidade (Alt+4)">
+        <i class="bi bi-universal-access" aria-hidden="true"></i>
+    </button>
+
+    <div class="acessibilidade-painel" id="painel-acessibilidade" data-painel
+         role="dialog" aria-labelledby="painel-acessibilidade-titulo" hidden>
+
+        <div class="acessibilidade-cabecalho">
+            <h2 id="painel-acessibilidade-titulo">Acessibilidade</h2>
+            <button type="button" class="acessibilidade-fechar" data-fechar-painel
+                    aria-label="Fechar o painel de acessibilidade">&times;</button>
+        </div>
+
+        <fieldset class="acessibilidade-grupo">
+            <legend>Tamanho da letra</legend>
+            <div class="acessibilidade-linha">
+                <button type="button" class="botao-preferencia" data-acao="diminuir-fonte"
+                        aria-label="Diminuir o tamanho da letra">A&minus;</button>
+                <button type="button" class="botao-preferencia" data-acao="restaurar-fonte"
+                        aria-label="Restaurar o tamanho padrão da letra">A</button>
+                <button type="button" class="botao-preferencia" data-acao="aumentar-fonte"
+                        aria-label="Aumentar o tamanho da letra">A+</button>
+            </div>
+        </fieldset>
+
+        <fieldset class="acessibilidade-grupo">
+            <legend>Visão</legend>
+            <div class="acessibilidade-opcoes">
+                <button type="button" class="botao-preferencia" data-alternar="contraste" aria-pressed="false">
+                    <i class="bi bi-circle-half" aria-hidden="true"></i> Alto contraste</button>
+                <button type="button" class="botao-preferencia" data-alternar="cinza" aria-pressed="false">
+                    <i class="bi bi-droplet-half" aria-hidden="true"></i> Escala de cinza</button>
+                <button type="button" class="botao-preferencia" data-alternar="links" aria-pressed="false">
+                    <i class="bi bi-link-45deg" aria-hidden="true"></i> Destacar links</button>
+                <button type="button" class="botao-preferencia" data-alternar="cursor" aria-pressed="false">
+                    <i class="bi bi-cursor" aria-hidden="true"></i> Cursor grande</button>
+            </div>
+        </fieldset>
+
+        <fieldset class="acessibilidade-grupo">
+            <legend>Leitura</legend>
+            <div class="acessibilidade-opcoes">
+                <button type="button" class="botao-preferencia" data-alternar="espacamento" aria-pressed="false">
+                    <i class="bi bi-text-paragraph" aria-hidden="true"></i> Espaçar texto</button>
+                <button type="button" class="botao-preferencia" data-alternar="fonteLegivel" aria-pressed="false">
+                    <i class="bi bi-fonts" aria-hidden="true"></i> Fonte legível</button>
+                <button type="button" class="botao-preferencia" data-alternar="guia" aria-pressed="false">
+                    <i class="bi bi-distribute-vertical" aria-hidden="true"></i> Guia de leitura</button>
+                <button type="button" class="botao-preferencia" data-alternar="movimento" aria-pressed="false">
+                    <i class="bi bi-pause-circle" aria-hidden="true"></i> Pausar animações</button>
+            </div>
+        </fieldset>
+
+        <fieldset class="acessibilidade-grupo" data-leitura>
+            <legend>Ouvir a página</legend>
+            <div class="acessibilidade-linha">
+                <button type="button" class="botao-preferencia" data-leitura-acao="ler">
+                    <i class="bi bi-volume-up" aria-hidden="true"></i> Ler em voz alta</button>
+                <button type="button" class="botao-preferencia" data-leitura-acao="parar" hidden>
+                    <i class="bi bi-stop-circle" aria-hidden="true"></i> Parar</button>
+            </div>
+            <p class="acessibilidade-dica" data-leitura-estado aria-live="polite">
+                Selecione um trecho para ouvir só ele.</p>
+        </fieldset>
+
+        <div class="acessibilidade-rodape">
+            <span><kbd>Alt</kbd>+<kbd>1</kbd> conteúdo · <kbd>Alt</kbd>+<kbd>2</kbd> menu · <kbd>Alt</kbd>+<kbd>3</kbd> rodapé</span>
+            <button type="button" class="acessibilidade-restaurar" data-acao="restaurar-tudo">Restaurar padrão</button>
+        </div>
+
+        <p class="apenas-leitor-de-tela" role="status" data-aviso-preferencia></p>
+    </div>
+</div>
