@@ -409,6 +409,28 @@ class FolhaDeAcessibilidadeCompartilhadaTest(TestCase):
         self.assertIn('css/acessibilidade.css', html)
 
 
+class NenhumCssVazandoComoTextoTest(TestCase):
+    """
+    Regra de CSS fora de <style> aparece como texto na página. Aconteceu de
+    verdade: as regras dos filtros e do mapa foram inseridas depois do
+    </style> e ficaram visíveis no topo da página de Ações. Este teste remove
+    os blocos <style> e <script> e procura o que sobrou com cara de CSS.
+    """
+
+    def test_paginas_publicas_nao_exibem_css_como_texto(self):
+        for pagina in ('public:home', 'public:sobre', 'public:acoes', 'public:contato',
+                       'users:login', 'users:cadastro'):
+            with self.subTest(pagina=pagina):
+                html = self.client.get(reverse(pagina)).content.decode()
+                visivel = re.sub(r'<style\b.*?</style>', '', html, flags=re.S)
+                visivel = re.sub(r'<script\b.*?</script>', '', visivel, flags=re.S)
+                vazamento = re.search(r'[.#][\w-]+\s*\{[^}]*;[^}]*\}', visivel)
+                self.assertIsNone(
+                    vazamento,
+                    f'CSS fora de <style>: {vazamento.group()[:80] if vazamento else ""}',
+                )
+
+
 class SitePublicoJavaScriptTest(TestCase):
 
     def test_paginas_publicas_referenciam_o_modulo_de_navegacao(self):
