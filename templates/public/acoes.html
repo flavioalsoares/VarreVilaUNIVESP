@@ -224,7 +224,7 @@
                 <div class="mes">{{ evento.data|date:"M/Y" }}</div>
             </div>
             <div class="pc-info">
-                <h4>{{ evento.titulo }}</h4>
+                <h3>{{ evento.titulo }}</h3>
                 <p><i class="bi bi-geo-alt"></i> {{ evento.bairro }} — {{ evento.local|truncatechars:50 }}</p>
                 <p><i class="bi bi-clock"></i> {{ evento.horario|default:"Horário a confirmar" }}</p>
                 <span class="vagas"><i class="bi bi-people"></i> {{ evento.vagas_disponiveis }} vagas disponíveis</span>
