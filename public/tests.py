@@ -160,11 +160,15 @@ class AcessibilidadeTest(TestCase):
     """
     Camada estática da acessibilidade — o que precisa funcionar sem JavaScript.
 
-    O comportamento dos controles vive em static/js/preferencias.js e não é
-    coberto por esta suíte: testar JavaScript exigiria Jest ou Vitest, e a
-    decisão foi não trazer npm ao projeto. O que se garante aqui é que a
-    marcação de que o script depende continua sendo entregue.
+    O comportamento do painel vive em static/js (preferencias.js, leitura.js,
+    guia-de-leitura.js, atalhos.js) e não é coberto por esta suíte: testar
+    JavaScript exigiria Jest ou Vitest, e a decisão foi não trazer npm ao
+    projeto. O que se garante aqui é que a marcação de que os módulos dependem
+    continua sendo entregue, e que ela é semanticamente correta por si só.
     """
+
+    TOGGLES = ('contraste', 'cinza', 'links', 'cursor',
+               'espacamento', 'fonteLegivel', 'guia', 'movimento')
 
     def setUp(self):
         self.html = self.client.get(reverse('public:home')).content.decode()
@@ -176,23 +180,53 @@ class AcessibilidadeTest(TestCase):
     def test_alvo_do_atalho_existe(self):
         self.assertIn('id="conteudo"', self.html)
 
-    def test_barra_de_preferencias_e_entregue(self):
-        self.assertIn('data-barra-acessibilidade', self.html)
+    def test_painel_e_entregue(self):
+        self.assertIn('data-painel-acessibilidade', self.html)
 
-    def test_barra_e_um_grupo_rotulado(self):
-        self.assertIn('aria-label="Preferências de acessibilidade"', self.html)
+    def test_painel_nasce_fechado(self):
+        """Sem JavaScript o botão não abre nada, então o painel chega escondido."""
+        painel = re.search(r'<div[^>]*id="painel-acessibilidade"[^>]*>', self.html)
+        self.assertIsNotNone(painel)
+        self.assertIn('hidden', painel.group())
 
-    def test_controles_de_fonte_e_contraste_existem(self):
-        for acao in ('diminuir-fonte', 'restaurar-fonte', 'aumentar-fonte',
-                     'alternar-contraste'):
+    def test_botao_de_abrir_declara_o_que_controla(self):
+        botao = re.search(r'<button[^>]*data-abrir-painel[^>]*>', self.html)
+        self.assertIsNotNone(botao)
+        self.assertIn('aria-expanded="false"', botao.group())
+        self.assertIn('aria-controls="painel-acessibilidade"', botao.group())
+        self.assertIn('aria-label=', botao.group())
+
+    def test_painel_e_um_dialogo_rotulado(self):
+        painel = re.search(r'<div[^>]*id="painel-acessibilidade"[^>]*>', self.html)
+        self.assertIn('role="dialog"', painel.group())
+        self.assertIn('aria-labelledby="painel-acessibilidade-titulo"', painel.group())
+        self.assertIn('id="painel-acessibilidade-titulo"', self.html)
+
+    def test_controles_de_fonte_existem(self):
+        for acao in ('diminuir-fonte', 'restaurar-fonte', 'aumentar-fonte', 'restaurar-tudo'):
             self.assertIn(f'data-acao="{acao}"', self.html)
 
-    def test_botao_de_contraste_expoe_o_estado(self):
-        self.assertIn('aria-pressed="false"', self.html)
+    def test_todas_as_alternancias_existem_e_expoem_o_estado(self):
+        for chave in self.TOGGLES:
+            with self.subTest(preferencia=chave):
+                botao = re.search(rf'<button[^>]*data-alternar="{chave}"[^>]*>', self.html)
+                self.assertIsNotNone(botao, f'falta o controle de {chave}')
+                self.assertIn('aria-pressed="false"', botao.group())
+
+    def test_leitura_em_voz_alta_tem_os_dois_controles(self):
+        self.assertIn('data-leitura-acao="ler"', self.html)
+        self.assertIn('data-leitura-acao="parar"', self.html)
+        self.assertIn('data-leitura-estado', self.html)
 
     def test_ha_regiao_viva_para_anunciar_a_mudanca(self):
         self.assertIn('role="status"', self.html)
         self.assertIn('data-aviso-preferencia', self.html)
+
+    def test_atalhos_de_teclado_sao_documentados_no_painel(self):
+        """O eMAG pede que os atalhos estejam visíveis, não só implementados."""
+        for atalho in ('<kbd>Alt</kbd>+<kbd>1</kbd>', '<kbd>Alt</kbd>+<kbd>2</kbd>',
+                       '<kbd>Alt</kbd>+<kbd>3</kbd>'):
+            self.assertIn(atalho, self.html)
 
     def test_todos_os_botoes_declaram_o_tipo(self):
         """Botão sem type age como submit e envia formulário sem querer."""
@@ -201,8 +235,17 @@ class AcessibilidadeTest(TestCase):
         for botao in botoes:
             self.assertIn('type=', botao, f'botão sem type declarado: {botao}')
 
-    def test_modulo_de_preferencias_e_carregado(self):
-        self.assertIn('js/preferencias.js', self.html)
+    def test_icones_decorativos_sao_ocultados_do_leitor_de_tela(self):
+        icones = re.findall(r'<i class="bi [^"]*"[^>]*>', self.html)
+        painel_ini = self.html.index('data-painel-acessibilidade')
+        for icone in icones:
+            if self.html.index(icone) > painel_ini:
+                self.assertIn('aria-hidden="true"', icone, f'ícone sem aria-hidden: {icone}')
+
+    def test_modulos_de_acessibilidade_sao_carregados(self):
+        for modulo in ('preferencias', 'atalhos', 'guia-de-leitura', 'leitura', 'vlibras'):
+            with self.subTest(modulo=modulo):
+                self.assertIn(f'js/{modulo}.js', self.html)
 
     def test_preferencias_carrega_sem_defer_para_evitar_piscada(self):
         """
@@ -213,6 +256,16 @@ class AcessibilidadeTest(TestCase):
             html = self.client.get(reverse(pagina)).content.decode()
             self.assertNotIn('type="module" src="/static/js/preferencias.js"', html)
             self.assertIn('<script src="/static/js/preferencias.js">', html)
+
+    def test_plugin_do_vlibras_carrega_antes_da_inicializacao(self):
+        """Módulos executam depois de scripts clássicos — a ordem no HTML importa."""
+        plugin = self.html.index('vlibras-plugin.js')
+        inicializacao = self.html.index('js/vlibras.js')
+        self.assertLess(plugin, inicializacao)
+
+    def test_marcacao_do_vlibras_e_entregue(self):
+        for atributo in ('vw-access-button', 'vw-plugin-wrapper'):
+            self.assertIn(atributo, self.html)
 
 
 class AcessibilidadeNaAreaInternaTest(TestCase):
@@ -233,11 +286,11 @@ class AcessibilidadeNaAreaInternaTest(TestCase):
         for nome in ('dashboard:index', 'events:lista', 'impact:lista', 'users:perfil'):
             yield nome, self.client.get(reverse(nome))
 
-    def test_todas_as_telas_internas_trazem_a_barra(self):
+    def test_todas_as_telas_internas_trazem_o_painel(self):
         for nome, resposta in self.paginas_internas():
             with self.subTest(pagina=nome):
                 self.assertEqual(resposta.status_code, 200)
-                self.assertIn('data-barra-acessibilidade', resposta.content.decode())
+                self.assertIn('data-painel-acessibilidade', resposta.content.decode())
 
     def test_todas_as_telas_internas_trazem_o_atalho_e_o_alvo(self):
         for nome, resposta in self.paginas_internas():
@@ -260,6 +313,39 @@ class AcessibilidadeNaAreaInternaTest(TestCase):
         self.client.login(username='operador', password='senha-de-teste')
         html = self.client.get(reverse('dashboard:index')).content.decode()
         self.assertEqual(html.count('id="conteudo"'), 1)
+
+    def test_painel_aparece_uma_vez_so_por_pagina(self):
+        """O include está nos dois bases; nenhuma página pode herdar os dois."""
+        for nome, resposta in self.paginas_internas():
+            with self.subTest(pagina=nome):
+                self.assertEqual(resposta.content.decode().count('id="painel-acessibilidade"'), 1)
+
+
+class AlternativasEmTabelaTest(TestCase):
+    """
+    O gráfico e o mapa do painel são invisíveis para leitor de tela.
+    alternativas-em-tabela.js gera uma <table> para cada um a partir dos
+    mesmos json_script; aqui se garante que os pontos de ancoragem e os
+    dados que o módulo lê estão na página.
+    """
+
+    def setUp(self):
+        CustomUser.objects.create_user(username='operador', password='senha-de-teste')
+        self.client.login(username='operador', password='senha-de-teste')
+        self.html = self.client.get(reverse('dashboard:index')).content.decode()
+
+    def test_modulo_e_carregado_no_painel(self):
+        self.assertIn('js/alternativas-em-tabela.js', self.html)
+
+    def test_ha_ancora_para_a_tabela_do_grafico(self):
+        self.assertIn('data-tabela-para="graficoMensal"', self.html)
+
+    def test_ha_ancora_para_a_tabela_do_mapa(self):
+        self.assertIn('data-tabela-para="map"', self.html)
+
+    def test_dados_que_o_modulo_le_estao_na_pagina(self):
+        for id_ in ('labels-data', 'dados-data', 'eventos-data'):
+            self.assertIn(f'id="{id_}"', self.html)
 
 
 class FolhaDeAcessibilidadeCompartilhadaTest(TestCase):

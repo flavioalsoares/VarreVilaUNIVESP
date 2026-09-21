@@ -352,21 +352,6 @@
 
 <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
 
-<div class="barra-acessibilidade" data-barra-acessibilidade>
-    <div class="barra-acessibilidade-controles" role="group" aria-label="Preferências de acessibilidade">
-        <span class="barra-acessibilidade-rotulo" aria-hidden="true">Acessibilidade</span>
-        <button type="button" class="botao-preferencia" data-acao="diminuir-fonte"
-                aria-label="Diminuir o tamanho da letra">A&minus;</button>
-        <button type="button" class="botao-preferencia" data-acao="restaurar-fonte"
-                aria-label="Restaurar o tamanho padrão da letra">A</button>
-        <button type="button" class="botao-preferencia" data-acao="aumentar-fonte"
-                aria-label="Aumentar o tamanho da letra">A+</button>
-        <button type="button" class="botao-preferencia" data-acao="alternar-contraste"
-                aria-pressed="false">Alto contraste</button>
-    </div>
-    <p class="apenas-leitor-de-tela" role="status" data-aviso-preferencia></p>
-</div>
-
 <div class="disclaimer-univesp">
     &#9888; <strong>Projeto Acadêmico</strong><br>
     Desenvolvido por alunos da disciplina<br>
@@ -444,6 +429,13 @@
 
 <script type="module" src="{% static 'js/navegacao.js' %}"></script>
 
+{% include "includes/painel_acessibilidade.html" %}
+{% include "includes/vlibras.html" %}
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script type="module" src="{% static 'js/vlibras.js' %}"></script>
+<script type="module" src="{% static 'js/atalhos.js' %}"></script>
+<script type="module" src="{% static 'js/guia-de-leitura.js' %}"></script>
+<script type="module" src="{% static 'js/leitura.js' %}"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

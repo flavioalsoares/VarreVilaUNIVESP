@@ -47,6 +47,7 @@
         <div class="card p-3 h-100">
             <h5 class="mb-3"><i class="bi bi-bar-chart-fill text-success"></i> Lixo Coletado por Mês (kg)</h5>
             <canvas id="graficoMensal" height="200"></canvas>
+            <div data-tabela-para="graficoMensal"></div>
         </div>
     </div>
 
@@ -84,6 +85,7 @@
 <div class="card p-3">
     <h5 class="mb-3"><i class="bi bi-map text-success"></i> Mapa de Ações</h5>
     <div id="map"></div>
+    <div data-tabela-para="map"></div>
     <div class="mt-2 d-flex gap-3">
         <span><span class="badge" style="background:#0d6efd">●</span> Planejado</span>
         <span><span class="badge bg-success">●</span> Realizado</span>
@@ -98,4 +100,5 @@
 {{ eventos_data|json_script:"eventos-data" }}
 <script type="module" src="{% static 'js/grafico-mensal.js' %}"></script>
 <script type="module" src="{% static 'js/mapa-eventos.js' %}"></script>
+<script type="module" src="{% static 'js/alternativas-em-tabela.js' %}"></script>
 {% endblock %}
