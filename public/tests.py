@@ -428,6 +428,18 @@ class AcessibilidadeNaAreaInternaTest(TestCase):
         html = self.client.get(reverse('dashboard:index')).content.decode()
         self.assertEqual(html.count('id="conteudo"'), 1)
 
+    def test_logotipo_da_area_interna_leva_a_home_mesmo_autenticado(self):
+        """
+        O logotipo apontava para o próprio painel quando a pessoa estava logada —
+        clicar nele em /sistema/ recarregava /sistema/. Convenção de qualquer
+        site: o logotipo volta ao início.
+        """
+        self.client.login(username='operador', password='senha-de-teste')
+        html = self.client.get(reverse('dashboard:index')).content.decode()
+        marca = re.search(r'<a class="navbar-brand"[^>]*>', html)
+        self.assertIsNotNone(marca)
+        self.assertIn(f'href="{reverse("public:home")}"', marca.group())
+
     def test_painel_aparece_uma_vez_so_por_pagina(self):
         """O include está nos dois bases; nenhuma página pode herdar os dois."""
         for nome, resposta in self.paginas_internas():
