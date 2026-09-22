@@ -46,8 +46,15 @@ const dados = document.getElementById('eventos-data');
 if (divDoMapa && dados && typeof L !== 'undefined') {
     const mapa = L.map(divDoMapa).setView(CENTRO_DE_SAO_PAULO, ZOOM_INICIAL);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
+    /* Tiles do CARTO, não dos servidores voluntários do OpenStreetMap: a
+       política de uso do OSM proíbe apps publicados de consumi-los direto,
+       e em setembro de 2026 passaram a devolver "Access blocked" para parte
+       dos visitantes. O CARTO usa os mesmos dados do OSM e permite este uso
+       com atribuição. */
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · © <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19,
     }).addTo(mapa);
 
     for (const evento of JSON.parse(dados.textContent)) {

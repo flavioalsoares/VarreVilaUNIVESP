@@ -101,6 +101,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
+# Referer para origens externas: só a origem, e só em HTTPS. O padrão do
+# Django ('same-origin') não envia Referer a domínio nenhum, e provedores de
+# tiles de mapa usam esse cabeçalho para identificar o site — sem ele, alguns
+# bloqueiam a requisição.
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
 LOGIN_URL = '/users/login/'
 LOGIN_REDIRECT_URL = '/sistema/'
 LOGOUT_REDIRECT_URL = '/users/login/'
