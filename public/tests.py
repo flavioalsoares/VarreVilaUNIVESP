@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.test import TestCase
 from django.urls import reverse
 
-from datetime import date
+from datetime import date, timedelta
 
 from events.models import Event
 from events.tests import cria_evento
@@ -190,6 +190,62 @@ class MapaPublicoTest(TestCase):
         Event.objects.all().delete()
         html = self.client.get(reverse('public:acoes')).content.decode()
         self.assertNotIn('data-mapa-publico', html)
+
+
+class PrevisaoDoTempoTest(TestCase):
+    """
+    previsao.js consome o Open-Meteo a partir do navegador. Aqui se garante a
+    marcação de que ele depende: coordenadas e data em cada card de próximo
+    mutirão, em formato que o JavaScript consiga ler, e a saída escondida
+    até haver o que mostrar.
+    """
+
+    def setUp(self):
+        self.com_coordenadas = cria_evento(
+            titulo='Com lugar', status='planejado',
+            data=date.today() + timedelta(days=5),
+            latitude=Decimal('-23.500400'), longitude=Decimal('-46.459000'),
+        )
+        self.sem_coordenadas = cria_evento(
+            titulo='Sem lugar', status='planejado', data=date.today() + timedelta(days=7),
+        )
+
+    def test_card_com_coordenadas_carrega_os_dados_da_previsao(self):
+        for pagina in ('public:home', 'public:acoes'):
+            with self.subTest(pagina=pagina):
+                html = self.client.get(reverse(pagina)).content.decode()
+                card = re.search(r'<div class="proximo-(?:item|card)"[^>]*data-previsao[^>]*>', html)
+                self.assertIsNotNone(card, 'card sem data-previsao')
+                self.assertIn('data-lat="-23.500400"', card.group())
+                self.assertIn('data-lng="-46.459000"', card.group())
+                self.assertIn(f'data-data="{self.com_coordenadas.data.isoformat()}"', card.group())
+
+    def test_coordenadas_saem_com_ponto_e_nao_virgula(self):
+        """Mesmo bug do PR #7: floatformat localizado quebraria o parseFloat."""
+        html = self.client.get(reverse('public:home')).content.decode()
+        self.assertNotIn('data-lat="-23,', html)
+
+    def test_card_sem_coordenadas_nao_pede_previsao(self):
+        html = self.client.get(reverse('public:home')).content.decode()
+        cards = re.findall(r'<div class="proximo-item"[^>]*>', html)
+        self.assertEqual(len(cards), 2)
+        self.assertEqual(sum('data-previsao' in c for c in cards), 1)
+
+    def test_saida_e_fonte_nascem_escondidas(self):
+        html = self.client.get(reverse('public:acoes')).content.decode()
+        saida = re.search(r'<p class="previsao"[^>]*>', html)
+        fonte = re.search(r'<p class="previsao-fonte"[^>]*>', html)
+        self.assertIn('hidden', saida.group())
+        self.assertIn('hidden', fonte.group())
+
+    def test_atribuicao_ao_open_meteo_esta_na_pagina(self):
+        html = self.client.get(reverse('public:acoes')).content.decode()
+        self.assertIn('open-meteo.com', html)
+
+    def test_modulo_e_carregado_nas_duas_paginas(self):
+        for pagina in ('public:home', 'public:acoes'):
+            with self.subTest(pagina=pagina):
+                self.assertIn('js/previsao.js', self.client.get(reverse(pagina)).content.decode())
 
 
 class PainelInternoTest(TestCase):

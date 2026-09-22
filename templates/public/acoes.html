@@ -219,7 +219,12 @@
     <h2 class="secao-sub-titulo">Próximos Mutirões</h2>
     <div class="proximos-cards">
         {% for evento in proximos %}
-        <div class="proximo-card">
+        <div class="proximo-card"
+             {% if evento.latitude and evento.longitude %}
+             data-previsao
+             data-lat="{{ evento.latitude|unlocalize }}"
+             data-lng="{{ evento.longitude|unlocalize }}"
+             data-data="{{ evento.data|date:'Y-m-d' }}"{% endif %}>
             <div class="pc-data">
                 <div class="dia">{{ evento.data|date:"d" }}</div>
                 <div class="mes">{{ evento.data|date:"M/Y" }}</div>
@@ -229,10 +234,12 @@
                 <p><i class="bi bi-geo-alt"></i> {{ evento.bairro }} — {{ evento.local|truncatechars:50 }}</p>
                 <p><i class="bi bi-clock"></i> {{ evento.horario|default:"Horário a confirmar" }}</p>
                 <span class="vagas"><i class="bi bi-people"></i> {{ evento.vagas_disponiveis }} vagas disponíveis</span>
+                <p class="previsao" data-previsao-saida hidden></p>
             </div>
         </div>
         {% endfor %}
     </div>
+    <p class="previsao-fonte" data-previsao-fonte hidden>Previsão do tempo: <a href="https://open-meteo.com/" rel="noopener">Open-Meteo</a>, atualizada ao abrir a página.</p>
     <div style="margin-top:32px; text-align:center">
         <a href="{% url 'users:login' %}" class="btn-primario">
             <i class="bi bi-person-check"></i> Inscrever-se em um mutirão
@@ -359,4 +366,5 @@
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script type="module" src="{% static 'js/filtros.js' %}"></script>
 <script type="module" src="{% static 'js/mapa-publico.js' %}"></script>
+<script type="module" src="{% static 'js/previsao.js' %}"></script>
 {% endblock %}
