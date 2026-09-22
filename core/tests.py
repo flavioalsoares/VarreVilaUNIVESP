@@ -28,9 +28,9 @@ class PopulateDemoTest(TestCase):
 
         self.assertTrue(CustomUser.objects.filter(username='admin').exists())
         self.assertEqual(CustomUser.objects.filter(perfil='voluntario').count(), 5)
-        self.assertEqual(Event.objects.filter(status='realizado').count(), 5)
-        self.assertEqual(Event.objects.filter(status='planejado').count(), 3)
-        self.assertEqual(ImpactReport.objects.count(), 5)
+        self.assertEqual(Event.objects.filter(status='realizado').count(), 19)
+        self.assertEqual(Event.objects.filter(status='planejado').count(), 5)
+        self.assertEqual(ImpactReport.objects.count(), 19)
 
     def test_admin_criado_e_superusuario(self):
         call_command('populate_demo', verbosity=0)
@@ -60,6 +60,23 @@ class PopulateDemoTest(TestCase):
     def test_inscricoes_sao_criadas_para_os_eventos(self):
         call_command('populate_demo', verbosity=0)
         self.assertGreater(Participation.objects.count(), 0)
+
+    def test_corrige_titulo_e_local_em_banco_ja_semeado(self):
+        """O mutirão do "Bixiga" ficava a 20 km do bairro. Bancos antigos são corrigidos, não duplicados."""
+        from decimal import Decimal
+        from events.models import Event
+        Event.objects.create(
+            titulo='Limpeza Córrego do Bixiga', descricao='x', data='2024-04-20',
+            local='Avenida Rincão, próx. ponte', bairro='Ermelino Matarazzo',
+            latitude=Decimal('-23.5020'), longitude=Decimal('-46.4610'), status='realizado',
+        )
+
+        call_command('populate_demo', verbosity=0)
+
+        self.assertFalse(Event.objects.filter(titulo='Limpeza Córrego do Bixiga').exists())
+        corrigido = Event.objects.get(titulo='Limpeza do Córrego Jacu')
+        self.assertIn('Jacu', corrigido.local)
+        self.assertEqual(Event.objects.filter(status='realizado').count(), 19)
 
     def test_rodar_duas_vezes_nao_duplica_nada(self):
         """A carga usa get_or_create — precisa ser segura em cada boot do container."""
