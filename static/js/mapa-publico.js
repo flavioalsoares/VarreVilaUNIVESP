@@ -56,7 +56,7 @@ async function iniciar(raiz, area) {
     const marcadores = new Map();
     for (const evento of geolocalizados) {
         const marcador = L.marker([evento.latitude, evento.longitude], {
-            icon: L.divIcon({ className: 'marcador-mutirao', iconSize: [18, 18] }),
+            icon: L.divIcon({ className: 'marcador-mutirao', iconSize: [24, 24] }),   // ≥ 24px: WCAG 2.5.8
             alt: `${evento.titulo}, ${evento.bairro}, ${formataData(evento.data)}`,
             title: evento.titulo,
         })
