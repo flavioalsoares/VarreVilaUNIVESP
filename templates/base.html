@@ -179,8 +179,8 @@
             <ul class="navbar-nav ms-auto">
                 {% if user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link text-light" href="{% url 'public:home' %}">
-                        <i class="bi bi-globe2"></i> Site Público
+                    <a class="nav-link text-light" href="{% url 'dashboard:index' %}">
+                        <i class="bi bi-speedometer2"></i> Painel
                     </a>
                 </li>
                 <li class="nav-item">
@@ -214,7 +214,7 @@
             <div class="nav flex-column">
                 <a class="nav-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}"
                    href="{% url 'dashboard:index' %}">
-                    <i class="bi bi-speedometer2"></i> Dashboard
+                    <i class="bi bi-speedometer2"></i> Painel
                 </a>
                 <a class="nav-link {% if request.resolver_match.app_name == 'events' %}active{% endif %}"
                    href="{% url 'events:lista' %}">
