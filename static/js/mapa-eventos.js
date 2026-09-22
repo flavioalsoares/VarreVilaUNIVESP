@@ -46,14 +46,15 @@ const dados = document.getElementById('eventos-data');
 if (divDoMapa && dados && typeof L !== 'undefined') {
     const mapa = L.map(divDoMapa).setView(CENTRO_DE_SAO_PAULO, ZOOM_INICIAL);
 
-    /* Tiles do CARTO, não dos servidores voluntários do OpenStreetMap: a
-       política de uso do OSM proíbe apps publicados de consumi-los direto,
-       e em setembro de 2026 passaram a devolver "Access blocked" para parte
-       dos visitantes. O CARTO usa os mesmos dados do OSM e permite este uso
-       com atribuição. */
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · © <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
+    /* Tiles do Esri World Street Map. Histórico da escolha, em setembro de
+       2026: os servidores voluntários do OpenStreetMap passaram a devolver
+       "Access blocked" — a política de uso deles proíbe apps publicados de
+       consumi-los direto. O CARTO, primeira alternativa, marca os tiles com
+       "API KEY REQUIRED" para domínios não cadastrados. O Esri permite uso
+       gratuito com atribuição, sem chave, e serve por CDN comercial.
+       Repare na ordem {z}/{y}/{x} — o Esri inverte y e x. */
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles © <a href="https://www.esri.com/">Esri</a> — Esri, TomTom, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors',
         maxZoom: 19,
     }).addTo(mapa);
 

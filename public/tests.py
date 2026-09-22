@@ -157,6 +157,15 @@ class MapaPublicoTest(TestCase):
     def test_folha_do_leaflet_e_carregada(self):
         self.assertIn('leaflet.css', self.html)
 
+    def test_plugin_de_agrupamento_carrega_entre_o_leaflet_e_o_modulo(self):
+        """O plugin estende L, então precisa do Leaflet antes e do módulo depois."""
+        leaflet = self.html.index('leaflet@1.9.4/dist/leaflet.js')
+        plugin = self.html.index('leaflet.markercluster.js')
+        modulo = self.html.index('js/mapa-publico.js')
+        self.assertLess(leaflet, plugin)
+        self.assertLess(plugin, modulo)
+        self.assertIn('MarkerCluster.css', self.html)
+
     def test_conteiner_chega_escondido(self):
         """Sem JavaScript não há mapa — e não deve haver um retângulo vazio."""
         conteiner = re.search(r'<div[^>]*data-mapa-publico[^>]*>', self.html)

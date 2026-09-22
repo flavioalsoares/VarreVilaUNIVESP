@@ -49,16 +49,27 @@ async function iniciar(raiz, area) {
 
     area.textContent = '';
     const mapa = L.map(area, { scrollWheelZoom: false }).setView(CENTRO_DE_SAO_PAULO, ZOOM_INICIAL);
-    /* Tiles do CARTO, não dos servidores voluntários do OpenStreetMap: a
-       política de uso do OSM proíbe apps publicados de consumi-los direto,
-       e em setembro de 2026 passaram a devolver "Access blocked" para parte
-       dos visitantes. O CARTO usa os mesmos dados do OSM e permite este uso
-       com atribuição. */
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · © <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
+    /* Tiles do Esri World Street Map. Histórico da escolha, em setembro de
+       2026: os servidores voluntários do OpenStreetMap passaram a devolver
+       "Access blocked" — a política de uso deles proíbe apps publicados de
+       consumi-los direto. O CARTO, primeira alternativa, marca os tiles com
+       "API KEY REQUIRED" para domínios não cadastrados. O Esri permite uso
+       gratuito com atribuição, sem chave, e serve por CDN comercial.
+       Repare na ordem {z}/{y}/{x} — o Esri inverte y e x. */
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles © <a href="https://www.esri.com/">Esri</a> — Esri, TomTom, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors',
         maxZoom: 19,
     }).addTo(mapa);
+
+    /* Mutirões da mesma comunidade ficam a poucas centenas de metros uns dos
+       outros e, no zoom que enquadra a cidade, os marcadores se sobrepõem —
+       não dá para tocar no que está embaixo. O plugin agrupa os próximos num
+       círculo com a contagem; clicar aproxima até separar. Se o plugin não
+       carregar, os marcadores vão direto ao mapa. */
+    const grupo = typeof L.markerClusterGroup === 'function'
+        ? L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 48 })
+        : L.layerGroup();
+    grupo.addTo(mapa);
 
     const marcadores = new Map();
     for (const evento of geolocalizados) {
@@ -66,26 +77,30 @@ async function iniciar(raiz, area) {
             icon: L.divIcon({ className: 'marcador-mutirao', iconSize: [24, 24] }),   // ≥ 24px: WCAG 2.5.8
             alt: `${evento.titulo}, ${evento.bairro}, ${formataData(evento.data)}`,
             title: evento.titulo,
-        })
-            .addTo(mapa)
-            .bindPopup(montaPopup(evento));
+        }).bindPopup(montaPopup(evento));
+        grupo.addLayer(marcador);
         marcadores.set(evento.id, marcador);
     }
 
     mapa.fitBounds(geolocalizados.map((e) => [e.latitude, e.longitude]), { padding: [24, 24], maxZoom: 13 });
     atualizaLegenda(legenda, geolocalizados.length, geolocalizados.length, false);
 
-    /* Os filtros da lista publicam os ids visíveis; o mapa só obedece. */
+    /* Os filtros da lista publicam os ids visíveis; o mapa só obedece. Com o
+       agrupamento, esconder por CSS deixaria a contagem do círculo errada —
+       o marcador sai e entra do grupo, e o grupo recalcula. */
     document.addEventListener('vv:filtro-aplicado', ({ detail }) => {
         const visiveis = new Set(detail.ids);
         let mostrados = 0;
         for (const [id, marcador] of marcadores) {
             const mostrar = !detail.filtrando || visiveis.has(id);
-            marcador.getElement()?.classList.toggle('oculto', !mostrar);
+            if (mostrar && !grupo.hasLayer(marcador)) {
+                grupo.addLayer(marcador);
+            } else if (!mostrar && grupo.hasLayer(marcador)) {
+                marcador.closePopup();
+                grupo.removeLayer(marcador);
+            }
             if (mostrar) {
                 mostrados += 1;
-            } else {
-                marcador.closePopup();
             }
         }
         atualizaLegenda(legenda, mostrados, marcadores.size, detail.filtrando);
