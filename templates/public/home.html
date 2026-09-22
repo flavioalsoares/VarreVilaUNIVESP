@@ -1,5 +1,5 @@
 {% extends 'public/base_publica.html' %}
-{% load static %}
+{% load static l10n %}
 
 {% block title %}{{ INST_NOME }} — {{ INST_SLOGAN }}{% endblock %}
 
@@ -558,7 +558,12 @@
 
     <div class="proximos-lista">
         {% for evento in proximos %}
-        <div class="proximo-item">
+        <div class="proximo-item"
+             {% if evento.latitude and evento.longitude %}
+             data-previsao
+             data-lat="{{ evento.latitude|unlocalize }}"
+             data-lng="{{ evento.longitude|unlocalize }}"
+             data-data="{{ evento.data|date:'Y-m-d' }}"{% endif %}>
             <div class="proximo-data">
                 <div class="dia">{{ evento.data|date:"d" }}</div>
                 <div class="mes">{{ evento.data|date:"M" }}</div>
@@ -566,11 +571,13 @@
             <div class="proximo-info">
                 <h3>{{ evento.titulo }}</h3>
                 <p><i class="bi bi-geo-alt"></i> {{ evento.bairro }} &nbsp;·&nbsp; <i class="bi bi-clock"></i> {{ evento.horario|default:"Horário a confirmar" }} &nbsp;·&nbsp; <i class="bi bi-people"></i> {{ evento.vagas_disponiveis }} vagas</p>
+                <p class="previsao" data-previsao-saida hidden></p>
             </div>
             <a href="{% url 'users:login' %}" class="btn-inscrever">Inscrever-se</a>
         </div>
         {% endfor %}
     </div>
+    <p class="previsao-fonte" data-previsao-fonte hidden>Previsão do tempo: <a href="https://open-meteo.com/" rel="noopener">Open-Meteo</a>, atualizada ao abrir a página.</p>
 </section>
 {% endif %}
 
@@ -591,4 +598,8 @@
     </div>
 </section>
 
+{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="{% static 'js/previsao.js' %}"></script>
 {% endblock %}
