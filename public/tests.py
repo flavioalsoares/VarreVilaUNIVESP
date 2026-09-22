@@ -440,6 +440,19 @@ class AcessibilidadeNaAreaInternaTest(TestCase):
         self.assertIsNotNone(marca)
         self.assertIn(f'href="{reverse("public:home")}"', marca.group())
 
+    def test_barra_superior_tem_caminho_de_volta_ao_painel(self):
+        """
+        O menu lateral some no celular. A barra superior é o único caminho de
+        volta ao painel a partir de mutirões, relatórios e perfil — antes ela
+        oferecia "Site Público", que o logotipo já cobre.
+        """
+        self.client.login(username='operador', password='senha-de-teste')
+        html = self.client.get(reverse('events:lista')).content.decode()
+        barra = re.search(r'<nav class="navbar.*?</nav>', html, re.S).group()
+        self.assertIn(f'href="{reverse("dashboard:index")}"', barra)
+        self.assertIn('Painel', barra)
+        self.assertNotIn('Site Público', barra)
+
     def test_painel_aparece_uma_vez_so_por_pagina(self):
         """O include está nos dois bases; nenhuma página pode herdar os dois."""
         for nome, resposta in self.paginas_internas():
