@@ -5,6 +5,8 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <style>
     :root { --page-tint: #dfe9c4; }
 
@@ -194,7 +196,6 @@
     .mapa-publico-area { height: 380px; border-radius: 16px; border: 1px solid var(--borda); overflow: hidden; background: var(--areia); }
     .mapa-publico-aviso { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--texto-suave); padding: 20px; text-align: center; }
     .marcador-mutirao { width: 24px; height: 24px; border-radius: 50%; background: var(--verde-medio); border: 3px solid #fff; box-shadow: 0 1px 6px rgba(0,0,0,0.35); }
-    .marcador-mutirao.oculto { display: none; }
     .leaflet-marker-icon:focus-visible { outline: 3px solid var(--laranja); outline-offset: 3px; border-radius: 50%; }
     .leaflet-popup-content { font-family: 'DM Sans', sans-serif; font-size: 0.9rem; line-height: 1.5; }
     .leaflet-popup-content strong { font-size: 1rem; }
@@ -355,6 +356,7 @@
 
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script type="module" src="{% static 'js/filtros.js' %}"></script>
 <script type="module" src="{% static 'js/mapa-publico.js' %}"></script>
 {% endblock %}
