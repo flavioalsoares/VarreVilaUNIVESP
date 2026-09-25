@@ -138,6 +138,38 @@ class FiltrosDaPaginaDeAcoesTest(TestCase):
         self.assertIn('Nenhuma ação registrada ainda', html)
 
 
+class ProximosMutiroesTest(TestCase):
+    """
+    "Próximos Mutirões" não pode listar mutirão que já passou. A home
+    filtrava por data; a página de Ações, não — e exibia eventos vencidos.
+    """
+
+    def setUp(self):
+        self.futuro = cria_evento(
+            titulo='Ainda vai acontecer', status='planejado',
+            data=date.today() + timedelta(days=5),
+        )
+        self.passado = cria_evento(
+            titulo='Já passou', status='planejado',
+            data=date.today() - timedelta(days=5),
+        )
+
+    def test_nenhuma_pagina_lista_mutirao_planejado_que_ja_passou(self):
+        for pagina in ('public:home', 'public:acoes'):
+            with self.subTest(pagina=pagina):
+                contexto = self.client.get(reverse(pagina)).context
+                titulos = [e.titulo for e in contexto['proximos']]
+                self.assertIn('Ainda vai acontecer', titulos)
+                self.assertNotIn('Já passou', titulos)
+
+    def test_mutirao_de_hoje_ainda_conta_como_proximo(self):
+        cria_evento(titulo='É hoje', status='planejado', data=date.today())
+        for pagina in ('public:home', 'public:acoes'):
+            with self.subTest(pagina=pagina):
+                titulos = [e.titulo for e in self.client.get(reverse(pagina)).context['proximos']]
+                self.assertIn('É hoje', titulos)
+
+
 class MapaPublicoTest(TestCase):
     """
     O mapa público é a tela renderizada no cliente a partir da API. O Django

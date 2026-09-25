@@ -206,10 +206,44 @@
         /* ── Previsão do tempo nos próximos mutirões (previsao.js) ── */
         .previsao { margin-top: 8px; font-size: 0.85rem; color: var(--verde-texto); font-weight: 600; }
         .previsao .previsao-icone { font-size: 1.1em; margin-right: 4px; }
+        /* Nos heróis vira sobretítulo: sem caixa, sem fundo, e perto do
+           título — a distância curta é o que faz ler como parte dele. */
+        .page-hero .tag-verde,
+        .hero-conteudo .tag-verde,
+        .hero-sobre .tag-verde {
+            background: none;
+            padding: 0;
+            border-radius: 0;
+            letter-spacing: 0.2em;
+            font-size: 0.72rem;
+            margin-bottom: 10px;
+        }
+
+        .page-hero .tag-verde,
+        .hero-conteudo .tag-verde { color: var(--verde-claro); }
+
+        .hero-sobre .tag-verde { color: var(--verde-texto); }
+
+        .previsao.previsao-aguarde { color: var(--texto-suave); font-weight: 400; font-style: italic; }
+        /* A seção de próximos da home tem fundo escuro: as cores acima, pensadas
+           para fundo claro, dariam 1,75:1 ali. */
+        .secao-proximos .previsao { color: var(--verde-claro); }
+        .secao-proximos .previsao.previsao-aguarde { color: rgba(255, 255, 255, 0.82); }
+        .secao-proximos .previsao-fonte,
+        .secao-proximos .previsao-fonte a { color: rgba(255, 255, 255, 0.78); }
         .previsao-fonte { margin-top: 16px; font-size: 0.75rem; color: var(--texto-suave); }
         .previsao-fonte a { color: inherit; }
 
         /* ── UTILITÁRIOS ── */
+        /* Rótulo de seção, não controle.
+
+           Duas coisas o faziam parecer botão: a pílula com borda sólida e,
+           sobretudo, a posição — centralizado e isolado acima de um título
+           grande, é exatamente onde se espera uma chamada para ação.
+
+           A borda saiu e o arredondamento encolheu. Nos heróis, onde o
+           problema de posição é maior, ele perde também o fundo e a caixa:
+           vira sobretítulo, colado no título que anuncia (ver adiante). */
         .tag-verde {
             display: inline-block;
             background: rgba(166, 206, 57, 0.16);
@@ -218,9 +252,8 @@
             font-weight: 600;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            padding: 5px 14px;
-            border-radius: 100px;
-            border: 1px solid rgba(166, 206, 57, 0.38);
+            padding: 5px 12px;
+            border-radius: 5px;
         }
 
         .btn-primario {
@@ -339,7 +372,7 @@
         :root[data-contraste="alto"] .tag-verde {
             background: #ffffff;
             color: #000000;
-            border-color: #000000;
+            outline: 1px solid #000000;
         }
 
         /* O rodapé fica preto pela troca de token; os brancos

@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.db.models import Sum, Count
+from django.utils import timezone
 from events.models import Event
 from impact.models import ImpactReport
 
@@ -20,7 +21,6 @@ def home(request):
     ).select_related('impact_report').order_by('-data')[:3]
 
     # Próximos mutirões
-    from django.utils import timezone
     proximos = Event.objects.filter(
         status='planejado',
         data__gte=timezone.now().date()
@@ -48,7 +48,12 @@ def acoes(request):
         status='realizado'
     ).select_related('impact_report').order_by('-data')
 
-    proximos = Event.objects.filter(status='planejado').order_by('data')[:6]
+    # Só o que ainda vai acontecer: sem o filtro de data, um mutirão
+    # planejado que já passou continuava listado como "próximo".
+    proximos = Event.objects.filter(
+        status='planejado',
+        data__gte=timezone.now().date(),
+    ).order_by('data')[:6]
 
     context = {
         'acoes_realizadas': acoes_realizadas,

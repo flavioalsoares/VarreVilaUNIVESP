@@ -11,8 +11,9 @@
  * vai de hoje ao mutirão mais distante dentro do horizonte de previsão, e cada
  * card pega o próprio dia da série.
  *
- * O horizonte é de 16 dias. Mutirão mais distante fica sem previsão, sem
- * ruído — a marcação nasce escondida e só é revelada quando há o que mostrar.
+ * O horizonte é de 16 dias. Mutirão mais distante não fica em branco: o card
+ * informa a partir de quando a previsão existirá. Um card com previsão ao lado
+ * de quatro vazios parece defeito; dizer "Previsão a partir de 07/10" explica.
  */
 
 const HORIZONTE_EM_DIAS = 16;
@@ -53,21 +54,33 @@ if (cards.length > 0) {
     prever(cards);
 }
 
+/** Dia em que o evento entra no horizonte de previsão. */
+function quandoHavera(dataDoEvento) {
+    const d = new Date(dataDoEvento + 'T12:00');
+    d.setDate(d.getDate() - (HORIZONTE_EM_DIAS - 1));
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
 async function prever(cards) {
     const hoje = hojeIso();
 
-    const alcancaveis = cards
-        .map((card) => ({
-            card,
-            lat: card.dataset.lat,
-            lng: card.dataset.lng,
-            data: card.dataset.data,
-            saida: card.querySelector('[data-previsao-saida]'),
-        }))
-        .filter(({ data, saida }) => {
-            const dias = diasEntre(hoje, data);
-            return saida && dias >= 0 && dias < HORIZONTE_EM_DIAS;
-        });
+    const previstos = cards.map((card) => ({
+        card,
+        lat: card.dataset.lat,
+        lng: card.dataset.lng,
+        data: card.dataset.data,
+        saida: card.querySelector('[data-previsao-saida]'),
+        dias: diasEntre(hoje, card.dataset.data),
+    })).filter(({ saida, dias }) => saida && dias >= 0);
+
+    const alcancaveis = previstos.filter(({ dias }) => dias < HORIZONTE_EM_DIAS);
+
+    /* Fora do horizonte o card não fica mudo: diz quando a previsão chega. */
+    for (const { saida, data } of previstos.filter(({ dias }) => dias >= HORIZONTE_EM_DIAS)) {
+        saida.textContent = `Previsão a partir de ${quandoHavera(data)}`;
+        saida.classList.add('previsao-aguarde');
+        saida.hidden = false;
+    }
 
     if (alcancaveis.length === 0) {
         return;
