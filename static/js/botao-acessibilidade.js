@@ -1,64 +1,100 @@
 /**
- * Mantém o botão de acessibilidade visível quando a janela do VLibras abre.
+ * Mantém o botão de acessibilidade visível quando algo o cobre — na prática,
+ * a janela do VLibras, que ao abrir ocupa a faixa direita da tela.
  *
- * Fechado, o VLibras é só um ícone de 40px e o nosso botão fica logo abaixo,
- * pela posição do CSS. Aberto, o widget vira um painel alto que cobre a faixa
- * direita — e engolia o nosso botão.
+ * A primeira versão media o retângulo do [vw-plugin-wrapper] e não funcionou:
+ * o painel real do VLibras não vive dentro dele com geometria mensurável.
+ * Esta versão não tenta adivinhar a estrutura do widget — pergunta ao próprio
+ * navegador quem está no lugar do botão, com elementFromPoint, e desce até
+ * achar espaço livre. Funciona para o VLibras e para qualquer outra coisa que
+ * venha a cobrir aquele canto.
  *
- * Aqui o botão passa a acompanhar: sempre que a área do widget muda de
- * tamanho, ele se reposiciona para logo abaixo da borda inferior dela. Se não
- * couber embaixo, encosta no rodapé da janela, que é o lugar livre mais
- * próximo.
- *
- * A detecção é por geometria, não por nome de classe: mede-se o retângulo do
- * [vw-plugin-wrapper]. Se o VLibras mudar a nomenclatura interna numa
- * atualização, isto continua funcionando. E se o widget não carregar, nada
- * acontece — o botão fica onde o CSS o pôs.
+ * Ao fechar, o botão volta sozinho: antes de cada avaliação a posição em
+ * linha é removida, então ele é sempre medido a partir do lugar do CSS.
  */
 
 const FOLGA = 12;
-const MARGEM_DA_JANELA = 12;
+const MARGEM = 12;
+const MAX_TENTATIVAS = 6;
+/* O painel do VLibras abre com animação. Uma única medida logo após o
+   clique pegaria o painel a meio caminho, e nenhuma mutação posterior
+   acordaria o módulo de novo — daí reavaliar algumas vezes. */
+const ESPERAS = [120, 400, 900];
 
 const botao = document.querySelector('[data-painel-acessibilidade] [data-abrir-painel]');
-const vlibras = document.querySelector('div[vw]');
-const janelaDoWidget = vlibras && vlibras.querySelector('[vw-plugin-wrapper]');
 
-if (botao && vlibras && janelaDoWidget) {
-    acompanhar(botao, vlibras, janelaDoWidget);
+if (botao) {
+    vigiar(botao);
 }
 
-function acompanhar(botao, vlibras, janelaDoWidget) {
-    /** Aberto quando o painel tem área na tela. */
-    function estaAberto() {
-        const r = janelaDoWidget.getBoundingClientRect();
-        return r.height > 8 && r.width > 8;
-    }
-
-    function reposicionar() {
-        if (!estaAberto()) {
-            botao.style.removeProperty('top');   // volta à posição do CSS
-            return;
+function vigiar(botao) {
+    /** Quem está desenhado por cima do botão, se alguém estiver. */
+    function quemCobre() {
+        const r = botao.getBoundingClientRect();
+        if (r.width === 0) {
+            return null;
         }
-
-        const painel = janelaDoWidget.getBoundingClientRect();
-        const altura = botao.offsetHeight || 40;
-        const limite = window.innerHeight - altura - MARGEM_DA_JANELA;
-
-        // Logo abaixo do painel; se não couber, no rodapé da janela.
-        const alvo = Math.min(painel.bottom + FOLGA, limite);
-        botao.style.top = `${Math.max(MARGEM_DA_JANELA, alvo)}px`;
+        const pontos = [
+            [r.left + 3, r.top + 3],
+            [r.right - 3, r.top + 3],
+            [r.left + r.width / 2, r.top + r.height / 2],
+            [r.left + 3, r.bottom - 3],
+            [r.right - 3, r.bottom - 3],
+        ];
+        for (const [x, y] of pontos) {
+            if (x < 0 || y < 0 || x > window.innerWidth || y > window.innerHeight) {
+                continue;
+            }
+            const alvo = document.elementFromPoint(x, y);
+            if (alvo && alvo !== botao && !botao.contains(alvo) && !alvo.contains(botao)) {
+                return alvo;
+            }
+        }
+        return null;
     }
 
-    /* O widget abre e fecha trocando classes e estilos nos próprios nós. */
-    new MutationObserver(reposicionar).observe(vlibras, {
+    function avaliar() {
+        /* Sempre parte da posição do CSS: é o que faz o botão voltar ao lugar
+           quando a janela do VLibras fecha. */
+        botao.style.removeProperty('top');
+
+        const limite = window.innerHeight - (botao.offsetHeight || 40) - MARGEM;
+
+        for (let i = 0; i < MAX_TENTATIVAS; i += 1) {
+            const cobridor = quemCobre();
+            if (!cobridor) {
+                return;                       // livre
+            }
+            const abaixo = cobridor.getBoundingClientRect().bottom + FOLGA;
+            const alvo = Math.max(MARGEM, Math.min(abaixo, limite));
+            const atual = botao.getBoundingClientRect().top;
+            if (alvo <= atual + 1) {
+                return;                       // não há para onde descer
+            }
+            botao.style.top = `${alvo}px`;
+        }
+    }
+
+    let agendados = [];
+    function agendar() {
+        for (const id of agendados) {
+            window.clearTimeout(id);
+        }
+        agendados = ESPERAS.map((ms) => window.setTimeout(avaliar, ms));
+    }
+
+    /* O widget abre e fecha mexendo no DOM; não se sabe onde, então observa-se
+       o documento inteiro, com espera para não reavaliar a cada mutação. */
+    new MutationObserver(agendar).observe(document.body, {
         attributes: true,
-        attributeFilter: ['class', 'style'],
-        subtree: true,
+        attributeFilter: ['class', 'style', 'hidden'],
         childList: true,
+        subtree: true,
     });
 
-    /* Redimensionar a janela com o painel aberto muda onde é "logo abaixo". */
-    window.addEventListener('resize', reposicionar, { passive: true });
+    document.addEventListener('click', agendar, true);
+    window.addEventListener('resize', agendar, { passive: true });
+    window.addEventListener('transitionend', agendar, true);
 
-    reposicionar();
+    avaliar();
 }

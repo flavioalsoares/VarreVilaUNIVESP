@@ -23,7 +23,7 @@ def home(request):
     # Próximos mutirões
     proximos = Event.objects.filter(
         status='planejado',
-        data__gte=timezone.now().date()
+        data__gte=timezone.localdate(),
     ).order_by('data')[:3]
 
     context = {
@@ -50,9 +50,13 @@ def acoes(request):
 
     # Só o que ainda vai acontecer: sem o filtro de data, um mutirão
     # planejado que já passou continuava listado como "próximo".
+    #
+    # localdate() e não now().date(): o segundo devolve a data em UTC, e
+    # depois das 21h em São Paulo já é o dia seguinte lá — o mutirão de
+    # hoje sumia da lista no fim da tarde.
     proximos = Event.objects.filter(
         status='planejado',
-        data__gte=timezone.now().date(),
+        data__gte=timezone.localdate(),
     ).order_by('data')[:6]
 
     context = {
