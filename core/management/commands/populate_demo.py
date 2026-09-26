@@ -435,7 +435,7 @@ class Command(BaseCommand):
                 )
 
         # ─── Eventos futuros ────────────────────────────────────────────
-        hoje = timezone.now().date()
+        hoje = timezone.localdate()
 
         proximos = [
             {

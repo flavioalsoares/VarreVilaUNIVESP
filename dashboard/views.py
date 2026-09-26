@@ -23,7 +23,7 @@ def index(request):
 
     # Próximos eventos
     from django.utils import timezone
-    proximos = Event.objects.filter(status='planejado', data__gte=timezone.now().date()).order_by('data')[:3]
+    proximos = Event.objects.filter(status='planejado', data__gte=timezone.localdate()).order_by('data')[:3]
 
     # Dados para gráfico mensal
     mensal = (

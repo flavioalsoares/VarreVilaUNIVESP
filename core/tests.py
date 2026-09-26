@@ -53,7 +53,7 @@ class PopulateDemoTest(TestCase):
 
         call_command('populate_demo', verbosity=0)
 
-        hoje = timezone.now().date()
+        hoje = timezone.localdate()
         for evento in Event.objects.filter(status='planejado'):
             self.assertGreater(evento.data, hoje)
 
