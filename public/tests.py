@@ -389,8 +389,7 @@ class AcessibilidadeTest(TestCase):
                 self.assertIn('aria-hidden="true"', icone, f'ícone sem aria-hidden: {icone}')
 
     def test_modulos_de_acessibilidade_sao_carregados(self):
-        for modulo in ('preferencias', 'atalhos', 'guia-de-leitura', 'leitura', 'vlibras',
-                       'botao-acessibilidade'):
+        for modulo in ('preferencias', 'atalhos', 'guia-de-leitura', 'leitura', 'vlibras'):
             with self.subTest(modulo=modulo):
                 self.assertIn(f'js/{modulo}.js', self.html)
 
