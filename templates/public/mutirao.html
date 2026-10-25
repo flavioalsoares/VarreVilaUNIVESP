@@ -1,0 +1,274 @@
+{% extends 'public/base_publica.html' %}
+{% load static l10n %}
+
+{% block title %}{{ evento.titulo }} — {{ INST_NOME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .mutirao-capa {
+        padding: 70px 5% 50px;
+        background: linear-gradient(135deg, rgba(166,206,57,0.12), rgba(166,206,57,0.02));
+        border-bottom: 1px solid var(--borda);
+    }
+
+    .mutirao-capa h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(1.9rem, 4vw, 2.8rem);
+        font-weight: 700;
+        color: var(--verde-escuro);
+        margin: 12px 0 18px;
+        max-width: 18ch;
+    }
+
+    .mutirao-fatos {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 28px;
+        font-size: 0.92rem;
+        color: var(--texto-suave);
+    }
+
+    .mutirao-fatos strong { color: var(--verde-escuro); font-weight: 600; }
+
+    .mutirao-corpo {
+        padding: 60px 5% 80px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr);
+        gap: 48px;
+        align-items: start;
+    }
+
+    .mutirao-descricao p { line-height: 1.8; color: var(--texto-suave); margin-bottom: 16px; }
+
+    .mutirao-endereco {
+        margin-top: 28px;
+        padding: 20px 22px;
+        border: 1px solid var(--borda);
+        border-radius: 14px;
+        background: #fff;
+    }
+
+    .mutirao-endereco h2 {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--texto-suave);
+        margin-bottom: 8px;
+    }
+
+    .mutirao-endereco p { font-size: 1rem; color: var(--verde-escuro); font-weight: 600; margin: 0; }
+
+    /* INSCRIÇÃO */
+    .inscricao-caixa {
+        border: 2px solid var(--verde-claro);
+        border-radius: 20px;
+        padding: 28px 26px;
+        background: rgba(166,206,57,0.06);
+        position: sticky;
+        top: 24px;
+    }
+
+    .inscricao-caixa h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--verde-escuro);
+        margin-bottom: 6px;
+    }
+
+    .inscricao-chamada { font-size: 0.88rem; color: var(--texto-suave); margin-bottom: 20px; }
+
+    .campo { margin-bottom: 16px; }
+
+    .campo label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--verde-escuro);
+        margin-bottom: 6px;
+    }
+
+    .campo input {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid var(--borda);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        background: #fff;
+        color: var(--verde-escuro);
+    }
+
+    .campo input:focus-visible {
+        outline: 3px solid var(--verde-medio);
+        outline-offset: 1px;
+        border-color: var(--verde-medio);
+    }
+
+    .campo .erro-campo { display: block; margin-top: 6px; font-size: 0.82rem; color: #a3261c; font-weight: 600; }
+
+    /* A armadilha de robô sai da tela sem display:none — campo escondido
+       assim é o que esses robôs aprenderam a ignorar. */
+    .campo-armadilha {
+        position: absolute;
+        left: -9999px;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+    }
+
+    .inscricao-aviso {
+        margin-bottom: 16px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        line-height: 1.5;
+    }
+
+    .inscricao-aviso.ok { background: rgba(166,206,57,0.22); color: var(--verde-escuro); border: 1px solid var(--verde-medio); }
+    .inscricao-aviso.erro { background: #fdecea; color: #a3261c; border: 1px solid #e8a69f; }
+    .inscricao-aviso:focus-visible { outline: 3px solid var(--verde-medio); outline-offset: 2px; }
+
+    .btn-inscricao {
+        width: 100%;
+        padding: 13px 18px;
+        border: none;
+        border-radius: 100px;
+        background: var(--verde-escuro);
+        color: #fff;
+        font-family: inherit;
+        font-size: 0.98rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-inscricao:hover { background: var(--verde-medio); }
+    .btn-inscricao[disabled] { opacity: 0.6; cursor: progress; }
+
+    .inscricao-rodape { margin-top: 14px; font-size: 0.78rem; color: var(--texto-suave); line-height: 1.6; }
+
+    .inscricao-fechada {
+        border: 1px solid var(--borda);
+        border-radius: 20px;
+        padding: 28px 26px;
+        background: #fff;
+    }
+
+    .inscricao-fechada h2 { font-size: 1.1rem; font-weight: 700; color: var(--verde-escuro); margin-bottom: 10px; }
+    .inscricao-fechada p { font-size: 0.9rem; color: var(--texto-suave); line-height: 1.6; }
+
+    @media (max-width: 880px) {
+        .mutirao-corpo { grid-template-columns: 1fr; gap: 36px; }
+        .inscricao-caixa { position: static; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="mutirao-capa">
+    <span class="tag-verde">
+        {% if evento.status == 'planejado' %}Mutirão agendado{% else %}{{ evento.get_status_display }}{% endif %}
+    </span>
+    <h1>{{ evento.titulo }}</h1>
+    <div class="mutirao-fatos">
+        <span><i class="bi bi-calendar-event"></i> <strong>{{ evento.data|date:"l, d \d\e F \d\e Y" }}</strong></span>
+        <span><i class="bi bi-clock"></i> {{ evento.horario|default:"Horário a confirmar" }}</span>
+        <span><i class="bi bi-geo-alt"></i> {{ evento.bairro }}</span>
+        {% if evento.status == 'planejado' %}
+        <span><i class="bi bi-people"></i> {{ evento.vagas_disponiveis }} de {{ evento.vagas }} vagas livres</span>
+        {% endif %}
+    </div>
+</section>
+
+<div class="mutirao-corpo">
+    <div class="mutirao-descricao">
+        <h2 class="apenas-leitor-de-tela">Sobre este mutirão</h2>
+        <p>{{ evento.descricao|linebreaksbr }}</p>
+
+        <div class="mutirao-endereco">
+            <h2>Onde é o encontro</h2>
+            <p>{{ evento.local }}</p>
+            <p style="font-weight:400;font-size:0.9rem;color:var(--texto-suave);margin-top:4px">{{ evento.bairro }}, São Paulo</p>
+        </div>
+
+        {% if evento.impact_report %}
+        <div class="mutirao-endereco" style="margin-top:16px">
+            <h2>O que este mutirão realizou</h2>
+            <p>{{ evento.impact_report.lixo_kg|unlocalize }} kg de resíduos ·
+               {{ evento.impact_report.sacos_coletados }} sacos ·
+               {{ evento.impact_report.numero_participantes }} participantes</p>
+        </div>
+        {% endif %}
+
+        <p style="margin-top:28px">
+            <a href="{% url 'public:acoes' %}">&larr; Ver todos os mutirões</a>
+        </p>
+    </div>
+
+    <div>
+        {% if aberto %}
+        <div class="inscricao-caixa">
+            <h2>Quero participar</h2>
+            <p class="inscricao-chamada">Sem cadastro e sem senha. Nome e e-mail bastam.</p>
+
+            {% if confirmacao %}
+            <p class="inscricao-aviso ok" data-inscricao-aviso role="status" tabindex="-1">{{ confirmacao }}</p>
+            {% endif %}
+
+            <form method="post" action="{% url 'public:mutirao' evento.pk %}" data-inscricao novalidate>
+                {% csrf_token %}
+
+                <div class="inscricao-aviso erro" data-inscricao-aviso role="alert" tabindex="-1"
+                     {% if not form.non_field_errors %}hidden{% endif %}>
+                    {% for erro in form.non_field_errors %}{{ erro }}{% endfor %}
+                </div>
+
+                {% for campo in form.visible_fields %}
+                <div class="campo{% if campo.name == 'sobrenome_do_meio' %} campo-armadilha{% endif %}">
+                    <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                    {{ campo }}
+                    {% for erro in campo.errors %}
+                    <span class="erro-campo" data-erro-de="{{ campo.name }}">{{ erro }}</span>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="btn-inscricao" data-inscricao-enviar>
+                    <i class="bi bi-check2-circle" aria-hidden="true"></i> Confirmar inscrição
+                </button>
+            </form>
+
+            <p class="inscricao-rodape">
+                Usamos seu contato só para avisar sobre este mutirão.
+                Projeto acadêmico — não envie dados que você não queira simular.
+            </p>
+        </div>
+        {% else %}
+        <div class="inscricao-fechada">
+            <h2>Inscrições encerradas</h2>
+            <p>
+                {% if evento.status == 'realizado' %}
+                    Este mutirão já aconteceu. Obrigado a quem esteve lá!
+                {% elif evento.status == 'cancelado' %}
+                    Este mutirão foi cancelado.
+                {% elif not evento.tem_vagas %}
+                    As vagas acabaram.
+                {% else %}
+                    A data deste mutirão já passou.
+                {% endif %}
+            </p>
+            <p style="margin-top:14px">
+                <a href="{% url 'public:acoes' %}" class="btn-primario" style="display:inline-block">
+                    Ver próximos mutirões
+                </a>
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="{% static 'js/inscricao.js' %}"></script>
+{% endblock %}

@@ -75,7 +75,7 @@
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <i class="bi bi-people text-success fs-5"></i>
                         <div>
-                            <div class="fw-semibold">{{ evento.participations.count }} / {{ evento.vagas }}</div>
+                            <div class="fw-semibold">{{ total_inscritos }} / {{ evento.vagas }}</div>
                             <div class="text-muted small">Inscritos / Vagas</div>
                         </div>
                     </div>
@@ -167,7 +167,51 @@
                 {% endfor %}
             </div>
             {% else %}
-            <p class="text-muted small">Nenhum inscrito ainda.</p>
+            <p class="text-muted small">Nenhum voluntário cadastrado inscrito.</p>
+            {% endif %}
+        </div>
+
+        {% comment %}
+            Quem se inscreveu pelo site público não tem conta, então não cai
+            em participations. No dia do mutirão as duas listas são a mesma
+            fila, e quem organiza precisa enxergar as duas.
+        {% endcomment %}
+        <div class="card p-3 mt-3">
+            <h5>
+                <i class="bi bi-globe2 text-success"></i>
+                Inscritos pelo site ({{ inscricoes_publicas|length }})
+            </h5>
+            {% if inscricoes_publicas %}
+            <div class="list-group list-group-flush">
+                {% for inscricao in inscricoes_publicas %}
+                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <div>
+                        <div class="fw-semibold">{{ inscricao.nome }}</div>
+                        <div class="text-muted small">
+                            {{ inscricao.email }}{% if inscricao.telefone %} · {{ inscricao.telefone }}{% endif %}
+                        </div>
+                    </div>
+                    {% if user.is_admin_vv %}
+                    <form method="post"
+                          action="{% url 'events:confirmar_presenca_publica' evento.pk inscricao.pk %}"
+                          class="m-0">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="badge border-0 {% if inscricao.presenca_confirmada %}bg-success{% else %}bg-secondary{% endif %}"
+                                aria-label="{% if inscricao.presenca_confirmada %}Desmarcar presença de {{ inscricao.nome }}{% else %}Confirmar presença de {{ inscricao.nome }}{% endif %}">
+                            {% if inscricao.presenca_confirmada %}<i class="bi bi-check" aria-hidden="true"></i>{% else %}<i class="bi bi-circle" aria-hidden="true"></i>{% endif %}
+                        </button>
+                    </form>
+                    {% else %}
+                    <span class="badge {% if inscricao.presenca_confirmada %}bg-success{% else %}bg-secondary{% endif %}">
+                        {% if inscricao.presenca_confirmada %}✓{% else %}—{% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted small">Ninguém se inscreveu pelo site ainda.</p>
             {% endif %}
         </div>
     </div>

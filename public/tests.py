@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from datetime import date, timedelta
 
-from events.models import Event
+from events.models import Event, InscricaoPublica
 from events.tests import cria_evento
 from impact.models import ImpactReport
 from users.models import CustomUser
@@ -608,3 +608,204 @@ class TarjaAcademicaTest(TestCase):
         """O banco é semeado por populate_demo; o aviso é o que torna isso honesto."""
         texto = self.tarja(self.client.get(reverse('public:home')).content.decode())
         self.assertIn('FICTÍCIOS', texto)
+
+
+class InscricaoSemLoginTest(TestCase):
+    """
+    A inscrição pública: participar sem criar conta.
+
+    Era a barreira central do projeto — quem via um mutirão no site e queria
+    ir era mandado para a tela de login, e o cadastro é onde a maioria
+    desiste. Estes testes cobrem o caminho sem JavaScript, que é o que
+    precisa funcionar sempre.
+    """
+
+    def setUp(self):
+        self.evento = cria_evento(vagas=3)
+        self.url = reverse('public:mutirao', args=[self.evento.pk])
+
+    def dados(self, **troca):
+        base = {
+            'nome': 'Marina Albuquerque',
+            'email': 'marina@example.com',
+            'telefone': '(11) 98100-0001',
+            'sobrenome_do_meio': '',
+        }
+        base.update(troca)
+        return base
+
+    def test_a_pagina_abre_sem_login_e_traz_o_formulario(self):
+        resposta = self.client.get(self.url)
+
+        self.assertEqual(resposta.status_code, 200)
+        html = resposta.content.decode()
+        self.assertIn('name="nome"', html)
+        self.assertIn('name="email"', html)
+
+    def test_a_pagina_mostra_o_endereco_e_nao_coordenadas(self):
+        """Pessoas em cidades se encontram por endereço."""
+        evento = cria_evento(
+            local='Praça do Campo Limpo, 200',
+            latitude=Decimal('-23.6512'), longitude=Decimal('-46.7580'),
+        )
+        html = self.client.get(reverse('public:mutirao', args=[evento.pk])).content.decode()
+
+        self.assertIn('Praça do Campo Limpo, 200', html)
+        self.assertNotIn('-23.6512', html)
+        self.assertNotIn('-46.7580', html)
+
+    def test_inscricao_grava_e_redireciona(self):
+        resposta = self.client.post(self.url, self.dados())
+
+        self.assertRedirects(resposta, self.url)
+        inscricao = InscricaoPublica.objects.get()
+        self.assertEqual(inscricao.nome, 'Marina Albuquerque')
+        self.assertEqual(inscricao.event, self.evento)
+
+    def test_a_confirmacao_sobrevive_ao_redirecionamento(self):
+        """Padrão POST-redirect-GET: recarregar não pode reenviar a inscrição."""
+        self.client.post(self.url, self.dados())
+
+        html = self.client.get(self.url).content.decode()
+        self.assertIn('Inscrição confirmada, Marina', html)
+
+        # A mensagem é consumida: não gruda na página para sempre.
+        html = self.client.get(self.url).content.decode()
+        self.assertNotIn('Inscrição confirmada', html)
+
+    def test_email_repetido_no_mesmo_mutirao_e_recusado(self):
+        self.client.post(self.url, self.dados())
+        resposta = self.client.post(self.url, self.dados(nome='Outra pessoa'))
+
+        self.assertEqual(InscricaoPublica.objects.count(), 1)
+        self.assertContains(resposta, 'já está inscrito', status_code=400)
+
+    def test_email_repetido_ignora_maiusculas(self):
+        """Sem normalizar, 'Ana@X.com' e 'ana@x.com' passariam como duas pessoas."""
+        self.client.post(self.url, self.dados(email='ana@example.com'))
+        self.client.post(self.url, self.dados(email='Ana@Example.COM'))
+
+        self.assertEqual(InscricaoPublica.objects.count(), 1)
+
+    def test_o_mesmo_email_pode_se_inscrever_em_outro_mutirao(self):
+        outro = cria_evento(titulo='Outro mutirão')
+        self.client.post(self.url, self.dados())
+        self.client.post(reverse('public:mutirao', args=[outro.pk]), self.dados())
+
+        self.assertEqual(InscricaoPublica.objects.count(), 2)
+
+    def test_armadilha_preenchida_nao_grava(self):
+        resposta = self.client.post(self.url, self.dados(sobrenome_do_meio='robô'))
+
+        self.assertEqual(InscricaoPublica.objects.count(), 0)
+        self.assertEqual(resposta.status_code, 400)
+
+    def test_mutirao_lotado_recusa(self):
+        for i in range(3):
+            InscricaoPublica.objects.create(
+                event=self.evento, nome=f'Pessoa {i}', email=f'p{i}@example.com',
+            )
+
+        resposta = self.client.post(self.url, self.dados())
+
+        self.assertEqual(InscricaoPublica.objects.filter(email='marina@example.com').count(), 0)
+        self.assertContains(resposta, 'vagas', status_code=400)
+
+    def test_mutirao_ja_realizado_nao_aceita_inscricao(self):
+        passado = cria_evento(
+            titulo='Mutirão antigo', status='realizado',
+            data=date.today() - timedelta(days=30),
+        )
+        url = reverse('public:mutirao', args=[passado.pk])
+
+        self.assertNotContains(self.client.get(url), 'name="email"')
+        self.client.post(url, self.dados())
+        self.assertEqual(InscricaoPublica.objects.count(), 0)
+
+    def test_mutirao_com_data_vencida_nao_aceita_inscricao(self):
+        """Planejado mas já passou: a agenda esconde, a página também fecha."""
+        vencido = cria_evento(
+            titulo='Mutirão esquecido na agenda',
+            data=date.today() - timedelta(days=1),
+        )
+
+        self.client.post(reverse('public:mutirao', args=[vencido.pk]), self.dados())
+        self.assertEqual(InscricaoPublica.objects.count(), 0)
+
+    def test_nome_e_email_sao_obrigatorios(self):
+        resposta = self.client.post(self.url, self.dados(nome='', email=''))
+
+        self.assertEqual(InscricaoPublica.objects.count(), 0)
+        self.assertEqual(resposta.status_code, 400)
+
+
+class InscricaoPorFetchTest(TestCase):
+    """O caminho com JavaScript: mesmo endereço, mesma regra, resposta em JSON."""
+
+    def setUp(self):
+        self.evento = cria_evento(vagas=2)
+        self.url = reverse('public:mutirao', args=[self.evento.pk])
+        self.dados = {
+            'nome': 'Rafael Toledo', 'email': 'rafael@example.com',
+            'telefone': '', 'sobrenome_do_meio': '',
+        }
+
+    def test_sucesso_devolve_json_e_grava(self):
+        resposta = self.client.post(self.url, self.dados, HTTP_ACCEPT='application/json')
+
+        self.assertEqual(resposta.status_code, 200)
+        corpo = resposta.json()
+        self.assertTrue(corpo['ok'])
+        self.assertIn('Rafael', corpo['mensagem'])
+        self.assertEqual(InscricaoPublica.objects.count(), 1)
+
+    def test_erro_devolve_json_com_o_campo_recusado(self):
+        self.client.post(self.url, self.dados, HTTP_ACCEPT='application/json')
+        resposta = self.client.post(self.url, self.dados, HTTP_ACCEPT='application/json')
+
+        self.assertEqual(resposta.status_code, 400)
+        corpo = resposta.json()
+        self.assertFalse(corpo['ok'])
+        self.assertIn('email', corpo['erros'])
+
+    def test_a_pagina_carrega_o_modulo_de_inscricao(self):
+        html = self.client.get(self.url).content.decode()
+        self.assertIn('js/inscricao.js', html)
+
+    def test_a_pagina_nao_tem_comportamento_embutido_na_marcacao(self):
+        html = self.client.get(self.url).content.decode()
+        self.assertEqual(re.findall(r'\son[a-z]+\s*=\s*"', html), [])
+
+    def test_o_formulario_funciona_sem_javascript(self):
+        """
+        O enriquecimento é progressivo: a marcação precisa trazer method,
+        action e o botão de envio, para o navegador dar conta sozinho.
+        """
+        html = self.client.get(self.url).content.decode()
+
+        self.assertIn('method="post"', html)
+        self.assertIn(f'action="{self.url}"', html)
+        self.assertIn('type="submit"', html)
+
+
+class ArmadilhaAcessivelTest(TestCase):
+    """
+    A armadilha de robô não pode virar armadilha de pessoa.
+
+    Esconder um campo só com CSS deixaria ele no caminho de quem navega por
+    teclado ou leitor de tela — que é o oposto do que o site se propõe.
+    """
+
+    def setUp(self):
+        self.html = self.client.get(
+            reverse('public:mutirao', args=[cria_evento().pk])
+        ).content.decode()
+
+    def test_o_campo_sai_da_ordem_de_tabulacao_e_do_leitor(self):
+        campo = re.search(r'<input[^>]*name="sobrenome_do_meio"[^>]*>', self.html)
+        self.assertIsNotNone(campo, 'a armadilha sumiu do formulário')
+        marcacao = campo.group(0)
+
+        self.assertIn('tabindex="-1"', marcacao)
+        self.assertIn('aria-hidden="true"', marcacao)
+        self.assertNotIn('type="hidden"', marcacao)

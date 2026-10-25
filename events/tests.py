@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from users.models import CustomUser
 
-from .models import Event, Participation
+from .models import Event, InscricaoPublica, Participation
 
 
 def cria_evento(**campos):
@@ -226,3 +226,155 @@ class ConfirmacaoDePresencaTest(TestCase):
         self.client.post(url)
         self.inscricao.refresh_from_db()
         self.assertFalse(self.inscricao.presenca_confirmada)
+
+
+class VagasContamAsDuasPortasTest(TestCase):
+    """
+    A lotação é do mutirão, não da porta por onde a pessoa entrou.
+
+    Contar só participations fazia o site anunciar vagas que já não existiam
+    e aceitar gente além do que o mutirão comporta.
+    """
+
+    def setUp(self):
+        self.evento = cria_evento(vagas=4)
+
+    def test_inscricao_publica_ocupa_vaga(self):
+        InscricaoPublica.objects.create(
+            event=self.evento, nome='Marina', email='marina@example.com',
+        )
+        self.assertEqual(self.evento.vagas_disponiveis(), 3)
+
+    def test_as_duas_origens_somam(self):
+        usuario = CustomUser.objects.create_user(username='vol', password='x')
+        Participation.objects.create(user=usuario, event=self.evento)
+        InscricaoPublica.objects.create(
+            event=self.evento, nome='Marina', email='marina@example.com',
+        )
+
+        self.assertEqual(self.evento.vagas_disponiveis(), 2)
+
+    def test_mutirao_lota_com_inscricoes_publicas(self):
+        for i in range(4):
+            InscricaoPublica.objects.create(
+                event=self.evento, nome=f'Pessoa {i}', email=f'p{i}@example.com',
+            )
+
+        self.assertFalse(self.evento.tem_vagas())
+
+
+class InscricaoPublicaNaTelaInternaTest(TestCase):
+    """Quem organiza o mutirão precisa ver as duas listas na mesma tela."""
+
+    def setUp(self):
+        self.admin = CustomUser.objects.create_user(
+            username='chefe', password='senha-de-teste', perfil='admin',
+        )
+        self.evento = cria_evento()
+        self.inscricao = InscricaoPublica.objects.create(
+            event=self.evento, nome='Cleide dos Santos',
+            email='cleide@example.com', telefone='(11) 98100-0003',
+        )
+        self.client.login(username='chefe', password='senha-de-teste')
+
+    def test_a_tela_lista_quem_veio_pelo_site(self):
+        html = self.client.get(
+            reverse('events:detalhe', args=[self.evento.pk])
+        ).content.decode()
+
+        self.assertIn('Cleide dos Santos', html)
+        self.assertIn('cleide@example.com', html)
+
+    def test_admin_alterna_a_presenca(self):
+        url = reverse(
+            'events:confirmar_presenca_publica',
+            args=[self.evento.pk, self.inscricao.pk],
+        )
+
+        self.client.post(url)
+        self.inscricao.refresh_from_db()
+        self.assertTrue(self.inscricao.presenca_confirmada)
+
+        self.client.post(url)
+        self.inscricao.refresh_from_db()
+        self.assertFalse(self.inscricao.presenca_confirmada)
+
+    def test_quem_nao_e_admin_nao_altera_presenca(self):
+        self.client.logout()
+        CustomUser.objects.create_user(
+            username='voluntario', password='senha-de-teste', perfil='voluntario',
+        )
+        self.client.login(username='voluntario', password='senha-de-teste')
+
+        self.client.post(reverse(
+            'events:confirmar_presenca_publica',
+            args=[self.evento.pk, self.inscricao.pk],
+        ))
+
+        self.inscricao.refresh_from_db()
+        self.assertFalse(self.inscricao.presenca_confirmada)
+
+    def test_anonimo_nao_alcanca_a_tela_interna(self):
+        self.client.logout()
+        resposta = self.client.get(reverse('events:detalhe', args=[self.evento.pk]))
+        self.assertEqual(resposta.status_code, 302)
+
+
+class ResumoDaTelaInternaTest(TestCase):
+    """
+    O resumo "Inscritos / Vagas" no topo da tela do mutirão.
+
+    Contava só participations e anunciava menos gente do que o mutirão tem.
+    Quem organiza usa esse número para saber quantos kits levar.
+    """
+
+    def setUp(self):
+        self.admin = CustomUser.objects.create_user(
+            username='chefe', password='senha-de-teste', perfil='admin',
+        )
+        self.evento = cria_evento(vagas=40)
+        Participation.objects.create(
+            user=CustomUser.objects.create_user(username='vol', password='x'),
+            event=self.evento,
+        )
+        for i in range(3):
+            InscricaoPublica.objects.create(
+                event=self.evento, nome=f'Pessoa {i}', email=f'p{i}@example.com',
+            )
+        self.client.login(username='chefe', password='senha-de-teste')
+
+    def test_o_resumo_soma_as_duas_origens(self):
+        html = self.client.get(
+            reverse('events:detalhe', args=[self.evento.pk])
+        ).content.decode()
+
+        self.assertIn('4 / 40', html)
+
+
+class TemplatesSemComentarioVazandoTest(TestCase):
+    """
+    {# #} no Django é comentário de UMA linha.
+
+    Escrito em várias linhas, ele não comenta nada: o texto sai renderizado
+    na tela. Aconteceu nesta própria tela e nenhum teste de conteúdo pegou,
+    porque para o teste é só mais um texto na página.
+    """
+
+    def setUp(self):
+        self.admin = CustomUser.objects.create_user(
+            username='chefe', password='senha-de-teste', perfil='admin',
+        )
+        self.evento = cria_evento()
+        self.client.login(username='chefe', password='senha-de-teste')
+
+    def test_nenhuma_tela_mostra_marca_de_comentario(self):
+        paginas = (
+            ('events:lista', []),
+            ('events:detalhe', [self.evento.pk]),
+            ('dashboard:index', []),
+        )
+        for nome, args in paginas:
+            with self.subTest(pagina=nome):
+                html = self.client.get(reverse(nome, args=args)).content.decode()
+                self.assertNotIn('{#', html)
+                self.assertNotIn('#}', html)
