@@ -195,14 +195,17 @@ select:focus-visible,
    deslocamento praticamente constante, não proporcional. Por isso o
    nosso se ancora ao centro e não ao topo, com folga de cerca de 15px
    abaixo dele. */
-/* Tentei reposicionar o botão do VLibras para alinhar o par com precisão;
-   o ícone sumiu da tela. Ele não é posicionado como aparenta, e quebrar o
-   widget de Libras do governo custa muito mais do que alguns pixels. A
-   posição dele fica intocada; o nosso é que se alinha a ela. */
+/* Canto inferior esquerdo, longe do VLibras, que mora a meia altura da
+   borda direita. Alinhar os dois custou três tentativas e nenhuma funcionou:
+   o widget do governo desenha em shadow DOM, então os nós que ele deixa no
+   documento medem 1350x0 e não dizem onde o painel está. Sem essa medida não
+   há como reagir à abertura dele, e um botão de acessibilidade que muda de
+   lugar é pior do que um que fica quieto — teclado e leitor de tela contam
+   com endereço estável. Então o par não se alinha: se afasta. */
 .acessibilidade-abrir {
     position: fixed;
-    right: 10px;
-    top: calc(50% + 28px);
+    left: 16px;
+    bottom: 16px;
     z-index: 1950;
     width: 40px;
     height: 40px;
@@ -224,12 +227,11 @@ select:focus-visible,
    inteiro em qualquer altura de janela, sem esbarrar no VLibras acima. */
 .acessibilidade-painel {
     position: fixed;
-    right: 62px;
-    top: 50%;
-    transform: translateY(-50%);
+    left: 16px;
+    bottom: 68px;
     z-index: 2147483000;
-    width: min(340px, calc(100vw - 86px));
-    max-height: calc(100vh - 32px);
+    width: min(340px, calc(100vw - 32px));
+    max-height: calc(100vh - 96px);
     overflow-y: auto;
     background: #fff;
     color: var(--verde-escuro);
@@ -250,9 +252,10 @@ select:focus-visible,
     .acessibilidade-painel {
         right: 12px;
         left: 12px;
-        top: auto;
-        bottom: 12px;
-        transform: none;
+        /* Acima do botão, nunca sobre ele: os dois passaram a morar no mesmo
+           canto e o painel tem z-index maior — encostar no rodapé esconderia
+           justamente o controle que o abre e fecha. */
+        bottom: 68px;
         width: auto;
         max-height: 72vh;
     }
