@@ -46,10 +46,20 @@ class EventoViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         # `inscritos` anotado aqui poupa uma consulta por evento na listagem —
         # o serializador usa a anotação quando ela existe.
+        #
+        # distinct=True nas duas contagens não é zelo: são dois LEFT JOIN na
+        # mesma consulta, e sem ele cada participação apareceria multiplicada
+        # pelo número de inscrições públicas do evento, e vice-versa. Um
+        # mutirão com 3 de cada reportaria 9 e 9 em vez de 3 e 3.
         queryset = (
             Event.objects
             .select_related('impact_report')
-            .annotate(inscritos=Count('participations'))
+            .annotate(
+                inscritos=(
+                    Count('participations', distinct=True)
+                    + Count('inscricoes_publicas', distinct=True)
+                ),
+            )
         )
 
         parametros = self.request.query_params

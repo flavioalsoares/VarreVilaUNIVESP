@@ -11,4 +11,6 @@ urlpatterns = [
     path('<int:pk>/inscrever/', views.inscrever_evento, name='inscrever'),
     path('<int:pk>/cancelar/', views.cancelar_inscricao, name='cancelar'),
     path('<int:pk>/presenca/<int:user_id>/', views.confirmar_presenca, name='confirmar_presenca'),
+    path('<int:pk>/presenca-publica/<int:inscricao_id>/', views.confirmar_presenca_publica,
+         name='confirmar_presenca_publica'),
 ]

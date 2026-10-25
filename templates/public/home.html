@@ -573,7 +573,7 @@
                 <p><i class="bi bi-geo-alt"></i> {{ evento.bairro }} &nbsp;·&nbsp; <i class="bi bi-clock"></i> {{ evento.horario|default:"Horário a confirmar" }} &nbsp;·&nbsp; <i class="bi bi-people"></i> {{ evento.vagas_disponiveis }} vagas</p>
                 <p class="previsao" data-previsao-saida hidden></p>
             </div>
-            <a href="{% url 'users:login' %}" class="btn-inscrever">Inscrever-se</a>
+            <a href="{% url 'public:mutirao' evento.pk %}" class="btn-inscrever">Inscrever-se</a>
         </div>
         {% endfor %}
     </div>

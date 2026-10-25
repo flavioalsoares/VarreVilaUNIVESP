@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
@@ -8,7 +9,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 
-from events.models import Event, Participation
+from events.models import Event, InscricaoPublica, Participation
 from impact.models import ImpactReport
 from users.models import CustomUser
 
@@ -34,6 +35,9 @@ class PopulateDemoTest(TestCase):
         self.assertEqual(Event.objects.filter(status='realizado').count(), 19)
         self.assertEqual(Event.objects.filter(status='planejado').count(), 5)
         self.assertEqual(ImpactReport.objects.count(), 19)
+        # Inscrições pelo site público: a tela da equipe nasceria vazia
+        # justamente na parte que o PI-2 acrescentou.
+        self.assertGreater(InscricaoPublica.objects.count(), 0)
 
     def test_admin_criado_e_superusuario(self):
         call_command('populate_demo', verbosity=0)
@@ -81,6 +85,25 @@ class PopulateDemoTest(TestCase):
         self.assertIn('Jacu', corrigido.local)
         self.assertEqual(Event.objects.filter(status='realizado').count(), 19)
 
+    def test_reancora_a_data_de_mutirao_planejado_que_envelheceu(self):
+        """
+        As datas dos planejados nascem relativas a hoje e só são gravadas na
+        criação. Num banco que sobrevive, a agenda envelhecia até esvaziar —
+        e a inscrição pública ficava sem mutirão a que se prender.
+        """
+        from django.utils import timezone
+
+        call_command('populate_demo', verbosity=0)
+        envelhecido = Event.objects.filter(status='planejado').first()
+        Event.objects.filter(pk=envelhecido.pk).update(
+            data=timezone.localdate() - timedelta(days=90),
+        )
+
+        call_command('populate_demo', verbosity=0)
+
+        envelhecido.refresh_from_db()
+        self.assertGreater(envelhecido.data, timezone.localdate())
+
     def test_rodar_duas_vezes_nao_duplica_nada(self):
         """A carga usa get_or_create — precisa ser segura em cada boot do container."""
         call_command('populate_demo', verbosity=0)
@@ -89,6 +112,7 @@ class PopulateDemoTest(TestCase):
             Event.objects.count(),
             ImpactReport.objects.count(),
             Participation.objects.count(),
+            InscricaoPublica.objects.count(),
         )
 
         call_command('populate_demo', verbosity=0)
@@ -100,6 +124,7 @@ class PopulateDemoTest(TestCase):
                 Event.objects.count(),
                 ImpactReport.objects.count(),
                 Participation.objects.count(),
+                InscricaoPublica.objects.count(),
             ),
         )
 

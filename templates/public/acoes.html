@@ -226,7 +226,7 @@
                 <div class="mes">{{ evento.data|date:"M/Y" }}</div>
             </div>
             <div class="pc-info">
-                <h3>{{ evento.titulo }}</h3>
+                <h3><a href="{% url 'public:mutirao' evento.pk %}">{{ evento.titulo }}</a></h3>
                 <p><i class="bi bi-geo-alt"></i> {{ evento.bairro }} — {{ evento.local|truncatechars:50 }}</p>
                 <p><i class="bi bi-clock"></i> {{ evento.horario|default:"Horário a confirmar" }}</p>
                 <span class="vagas"><i class="bi bi-people"></i> {{ evento.vagas_disponiveis }} vagas disponíveis</span>
@@ -236,11 +236,9 @@
         {% endfor %}
     </div>
     <p class="previsao-fonte" data-previsao-fonte hidden>Previsão do tempo: <a href="https://open-meteo.com/" rel="noopener">Open-Meteo</a>, atualizada ao abrir a página.</p>
-    <div style="margin-top:32px; text-align:center">
-        <a href="{% url 'users:login' %}" class="btn-primario">
-            <i class="bi bi-person-check"></i> Inscrever-se em um mutirão
-        </a>
-    </div>
+    <p style="margin-top:28px; text-align:center; color:var(--texto-suave); font-size:0.9rem">
+        Clique no mutirão para ver o endereço completo e se inscrever &mdash; sem cadastro.
+    </p>
 </section>
 {% endif %}
 
@@ -320,7 +318,7 @@
                 <div class="mes-ano">{{ acao.data|date:"M Y" }}</div>
             </div>
             <div class="acao-linha-corpo">
-                <h3>{{ acao.titulo }}</h3>
+                <h3><a href="{% url 'public:mutirao' acao.pk %}">{{ acao.titulo }}</a></h3>
                 <div class="local">
                     <i class="bi bi-geo-alt-fill" style="color:var(--verde-vivo)"></i>
                     {{ acao.bairro }} · {{ acao.local }}

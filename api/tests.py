@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
-from events.models import Participation
+from events.models import InscricaoPublica, Participation
 from events.tests import cria_evento
 from impact.models import ImpactReport
 from users.models import CustomUser
@@ -229,3 +229,40 @@ class DocumentacaoDaApiTest(APITestCase):
         resposta = self.client.get(reverse('api:docs'))
         self.assertEqual(resposta.status_code, 200)
         self.assertIn(b'swagger', resposta.content.lower())
+
+
+class VagasNaApiContamAsDuasOrigensTest(APITestCase):
+    """
+    A API anota `inscritos` com dois LEFT JOIN na mesma consulta.
+
+    Sem distinct=True cada participação apareceria multiplicada pelo número
+    de inscrições públicas do evento, e vice-versa — um mutirão com 3 de
+    cada reportaria 9 e 9 em vez de 3 e 3, e `vagas_disponiveis` ficaria
+    negativo sem que ninguém tivesse se inscrito a mais.
+    """
+
+    def setUp(self):
+        self.evento = cria_evento(vagas=10)
+        for i in range(3):
+            usuario = CustomUser.objects.create_user(username=f'vol{i}', password='x')
+            Participation.objects.create(user=usuario, event=self.evento)
+            InscricaoPublica.objects.create(
+                event=self.evento, nome=f'Pessoa {i}', email=f'p{i}@example.com',
+            )
+
+    def test_vagas_disponiveis_desconta_as_duas_origens(self):
+        resposta = self.client.get('/api/v1/eventos/')
+        evento = next(
+            e for e in resposta.json()['results'] if e['id'] == self.evento.pk
+        )
+
+        # 10 vagas menos 3 participações menos 3 inscrições públicas.
+        self.assertEqual(evento['vagas_disponiveis'], 4)
+
+    def test_a_api_nao_revela_quem_se_inscreveu(self):
+        """Nenhum dado de pessoa sai da API — vale para a porta nova também."""
+        corpo = self.client.get('/api/v1/eventos/').content.decode()
+
+        self.assertNotIn('Pessoa 0', corpo)
+        self.assertNotIn('p0@example.com', corpo)
+        self.assertNotIn('inscricoes_publicas', corpo)

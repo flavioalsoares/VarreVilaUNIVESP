@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
-from .models import Event, Participation
+from .models import Event, InscricaoPublica, Participation
 from .forms import EventForm
 
 
@@ -19,7 +19,17 @@ def lista_eventos(request):
 def detalhe_evento(request, pk):
     evento = get_object_or_404(Event, pk=pk)
     inscrito = Participation.objects.filter(user=request.user, event=evento).exists()
-    return render(request, 'events/detalhe.html', {'evento': evento, 'inscrito': inscrito})
+    return render(request, 'events/detalhe.html', {
+        'evento': evento,
+        'inscrito': inscrito,
+        # Quem chegou pelo site público não tem conta, então não aparece em
+        # participations. Sem esta lista, a equipe organizaria o mutirão sem
+        # saber de parte das pessoas que vão aparecer.
+        'inscricoes_publicas': evento.inscricoes_publicas.all(),
+        # O resumo do topo contava só participations e anunciava menos gente
+        # do que o mutirão tem — a lotação é do evento, não da porta.
+        'total_inscritos': evento.participations.count() + evento.inscricoes_publicas.count(),
+    })
 
 
 @login_required
@@ -93,4 +103,24 @@ def confirmar_presenca(request, pk, user_id):
     participacao = get_object_or_404(Participation, event_id=pk, user_id=user_id)
     participacao.presenca_confirmada = not participacao.presenca_confirmada
     participacao.save()
+    return redirect('events:detalhe', pk=pk)
+
+
+@login_required
+@require_POST
+def confirmar_presenca_publica(request, pk, inscricao_id):
+    """
+    Mesma alternância de presença, para quem se inscreveu pelo site.
+
+    Vive separada de confirmar_presenca porque as duas inscrições apontam
+    para coisas diferentes: uma tem CustomUser, a outra só tem o que a
+    pessoa digitou. No dia do mutirão, para quem segura a prancheta, são a
+    mesma fila — e é por isso que as duas aparecem lado a lado na tela.
+    """
+    if not request.user.is_admin_vv():
+        messages.error(request, 'Acesso negado.')
+        return redirect('events:detalhe', pk=pk)
+    inscricao = get_object_or_404(InscricaoPublica, pk=inscricao_id, event_id=pk)
+    inscricao.presenca_confirmada = not inscricao.presenca_confirmada
+    inscricao.save()
     return redirect('events:detalhe', pk=pk)

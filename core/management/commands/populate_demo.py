@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from events.models import Event, Participation
+from events.models import Event, InscricaoPublica, Participation
 from impact.models import ImpactReport
 from decimal import Decimal
 import datetime
@@ -515,5 +515,48 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f'Evento planejado criado: {evento.titulo}'))
                 for vol in voluntarios[:2]:
                     Participation.objects.get_or_create(user=vol, event=evento)
+            elif evento.status == 'planejado' and evento.data != ep['data']:
+                # As datas nascem relativas a hoje, mas get_or_create só as
+                # grava na criação. Num banco que sobrevive, os "próximos
+                # mutirões" envelheciam até a agenda ficar vazia — e foi o que
+                # aconteceu no banco de desenvolvimento, onde os cinco
+                # planejados já tinham data no passado. Em produção isso
+                # passava despercebido só porque o banco gratuito é recriado
+                # a cada renovação.
+                evento.data = ep['data']
+                evento.save(update_fields=['data'])
+                self.stdout.write(self.style.WARNING(
+                    f'Data reancorada: {evento.titulo} → {evento.data}'
+                ))
 
+        # Inscrições feitas pelo site público, sem conta. Sem elas a tela da
+        # equipe nasceria vazia justamente na parte que o PI-2 acrescentou, e
+        # ninguém veria a lista funcionando.
+        #
+        # Os nomes são inventados, como todo o resto do conjunto — a tarja do
+        # topo do site avisa isso em toda página. Os e-mails usam example.com,
+        # domínio reservado pela RFC 2606 justamente para não existir: nenhum
+        # endereço aqui pode cair na caixa de uma pessoa real.
+        INSCRITOS_PELO_SITE = [
+            ('Marina Albuquerque', 'marina.albuquerque@example.com', '(11) 98100-0001'),
+            ('Rafael Toledo', 'rafael.toledo@example.com', ''),
+            ('Cleide dos Santos', 'cleide.santos@example.com', '(11) 98100-0003'),
+            ('Wesley Nakamura', 'wesley.nakamura@example.com', ''),
+            ('Dona Irene Barbosa', 'irene.barbosa@example.com', '(11) 98100-0005'),
+        ]
+
+        planejados = list(Event.objects.filter(status='planejado').order_by('data'))
+        for indice, evento in enumerate(planejados):
+            # Quantidade variável por mutirão: uma lista com o mesmo tamanho
+            # em todos pareceria gerada, que é exatamente o que ela é.
+            quantos = (indice % 3) + 2
+            for nome, email, telefone in INSCRITOS_PELO_SITE[:quantos]:
+                InscricaoPublica.objects.get_or_create(
+                    event=evento, email=email,
+                    defaults={'nome': nome, 'telefone': telefone},
+                )
+
+        self.stdout.write(self.style.SUCCESS(
+            f'Inscrições pelo site: {InscricaoPublica.objects.count()}'
+        ))
         self.stdout.write(self.style.SUCCESS('=== Dados de demonstração carregados com sucesso! ==='))

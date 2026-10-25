@@ -1,8 +1,14 @@
-from django.shortcuts import render
+from django.db import transaction
 from django.db.models import Sum, Count
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
+
 from events.models import Event
 from impact.models import ImpactReport
+
+from .forms import InscricaoPublicaForm
 
 
 def home(request):
@@ -69,3 +75,82 @@ def acoes(request):
 def contato(request):
     """Página de contato e como participar."""
     return render(request, 'public/contato.html')
+
+
+def _pede_json(request):
+    """
+    O mesmo endereço atende os dois caminhos.
+
+    Sem JavaScript o navegador envia o formulário e recarrega a página; com
+    ele, inscricao.js manda o mesmo POST pedindo JSON e troca só o trecho do
+    formulário. Uma view só, uma regra só — a resposta é que muda de forma.
+    """
+    return 'application/json' in request.headers.get('Accept', '')
+
+
+def mutirao(request, pk):
+    """
+    Página pública de um mutirão, com inscrição sem conta.
+
+    Até aqui, quem via um mutirão no site e queria participar era mandado
+    para a tela de login. Esta página encerra esse desvio.
+    """
+    evento = get_object_or_404(Event.objects.select_related('impact_report'), pk=pk)
+
+    aberto = (
+        evento.status == 'planejado'
+        and evento.data >= timezone.localdate()
+        and evento.tem_vagas()
+    )
+
+    if request.method != 'POST':
+        contexto = {
+            'evento': evento,
+            'aberto': aberto,
+            'form': InscricaoPublicaForm(evento=evento),
+            'inscritos': evento.inscricoes_publicas.count() + evento.participations.count(),
+            # Sem JavaScript a confirmação chega por redirecionamento, para
+            # que recarregar a página não reenvie o formulário. A mensagem
+            # atravessa esse salto na sessão e é consumida aqui.
+            'confirmacao': request.session.pop('inscricao_confirmada', None),
+        }
+        return render(request, 'public/mutirao.html', contexto)
+
+    form = InscricaoPublicaForm(request.POST, evento=evento)
+
+    # A vaga é conferida dentro da transação, com a linha do evento travada:
+    # duas pessoas clicando no mesmo instante na última vaga passariam as
+    # duas pela checagem do formulário antes de qualquer uma gravar.
+    gravou = False
+    if form.is_valid():
+        with transaction.atomic():
+            travado = Event.objects.select_for_update().get(pk=evento.pk)
+            if travado.tem_vagas():
+                inscricao = form.save(commit=False)
+                inscricao.event = travado
+                inscricao.save()
+                gravou = True
+
+    if gravou:
+        mensagem = (
+            f'Inscrição confirmada, {form.cleaned_data["nome"].split()[0]}! '
+            f'Esperamos você no dia {evento.data.strftime("%d/%m")}.'
+        )
+        if _pede_json(request):
+            return JsonResponse({'ok': True, 'mensagem': mensagem})
+        request.session['inscricao_confirmada'] = mensagem
+        return redirect(reverse('public:mutirao', args=[evento.pk]))
+
+    if not form.errors:
+        form.add_error(None, 'As vagas deste mutirão acabaram enquanto você preenchia.')
+
+    if _pede_json(request):
+        return JsonResponse({'ok': False, 'erros': form.errors}, status=400)
+
+    contexto = {
+        'evento': evento,
+        'aberto': aberto,
+        'form': form,
+        'inscritos': evento.inscricoes_publicas.count() + evento.participations.count(),
+    }
+    return render(request, 'public/mutirao.html', contexto, status=400)
