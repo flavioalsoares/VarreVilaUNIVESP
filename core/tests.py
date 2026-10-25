@@ -1,6 +1,9 @@
 import os
+import re
+from pathlib import Path
 from unittest.mock import patch
 
+from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
@@ -116,3 +119,45 @@ class PopulateDemoTravaTest(TestCase):
         with patch.dict(os.environ, {'LOAD_DEMO_DATA': '1'}):
             call_command('populate_demo', verbosity=0)
         self.assertTrue(CustomUser.objects.filter(username='admin').exists())
+
+
+class RenderBlueprintTest(TestCase):
+    """
+    Coerência do render.yaml, que descreve a infraestrutura de produção.
+
+    O Postgres gratuito do Render não renova: a cada expiração é preciso
+    provisionar uma instância nova, e o Render mantém o nome antigo ocupado —
+    então a renovação é, na prática, uma troca de nome. O nome aparece em dois
+    pontos do arquivo, e trocar só um deixa DATABASE_URL apontando para um
+    banco inexistente: o site volta exatamente com o HTTP 500 que a renovação
+    queria consertar. Estes testes olham o arquivo porque é a única parte da
+    infraestrutura que mora no repositório.
+    """
+
+    def setUp(self):
+        self.blueprint = (Path(settings.BASE_DIR) / 'render.yaml').read_text()
+        self.servicos, _, self.bancos = self.blueprint.partition('\ndatabases:')
+
+    def test_os_dois_pontos_citam_o_mesmo_banco(self):
+        self.assertTrue(self.bancos, 'render.yaml sem o bloco databases:')
+
+        referenciado = re.search(
+            r'fromDatabase:\s*\n\s*name:\s*(\S+)', self.servicos,
+        )
+        self.assertIsNotNone(
+            referenciado, 'DATABASE_URL deixou de vir de um fromDatabase',
+        )
+        declarados = re.findall(r'-\s*name:\s*(\S+)', self.bancos)
+
+        # Um só, e não apenas igual: o plano gratuito aceita um único banco
+        # ativo por conta, então declarar dois faz o Sync do Blueprint falhar.
+        self.assertEqual([referenciado.group(1)], declarados)
+
+    def test_a_trava_do_seed_esta_declarada(self):
+        """
+        O build.sh roda populate_demo com `set -o errexit`.
+
+        Sem LOAD_DEMO_DATA=1 o comando levanta CommandError (é a trava que
+        impede semear produção por acidente) e o deploy inteiro falha.
+        """
+        self.assertRegex(self.servicos, r'key:\s*LOAD_DEMO_DATA\s*\n\s*value:\s*"1"')
