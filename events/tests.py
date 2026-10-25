@@ -378,3 +378,38 @@ class TemplatesSemComentarioVazandoTest(TestCase):
                 html = self.client.get(reverse(nome, args=args)).content.decode()
                 self.assertNotIn('{#', html)
                 self.assertNotIn('#}', html)
+
+
+class InscricaoPublicaNoAdminTest(TestCase):
+    """
+    A equipe precisa poder apagar uma inscrição.
+
+    A tela do mutirão só lista. Sem registro no admin, remover um engano,
+    uma inscrição de teste ou atender um pedido de remoção exigiria mexer no
+    banco à mão.
+    """
+
+    def setUp(self):
+        self.admin = CustomUser.objects.create_superuser(
+            username='super', password='senha-de-teste', email='super@example.com',
+        )
+        self.inscricao = InscricaoPublica.objects.create(
+            event=cria_evento(), nome='Engano', email='engano@example.com',
+        )
+        self.client.login(username='super', password='senha-de-teste')
+
+    def test_a_lista_aparece_no_admin(self):
+        resposta = self.client.get('/admin/events/inscricaopublica/')
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'engano@example.com')
+
+    def test_da_para_apagar_pelo_admin(self):
+        self.client.post(
+            f'/admin/events/inscricaopublica/{self.inscricao.pk}/delete/',
+            {'post': 'yes'},
+        )
+
+        self.assertFalse(
+            InscricaoPublica.objects.filter(pk=self.inscricao.pk).exists()
+        )
