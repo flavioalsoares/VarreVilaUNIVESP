@@ -565,3 +565,46 @@ class SitePublicoJavaScriptTest(TestCase):
             html = self.client.get(reverse(pagina)).content.decode()
             achados = re.findall(r'\son[a-z]+\s*=\s*"', html)
             self.assertEqual(achados, [], f'{pagina} tem handler inline: {achados}')
+
+
+class TarjaAcademicaTest(TestCase):
+    """
+    A tarja que identifica a disciplina vive copiada nos dois base.html.
+
+    Ela ficou um semestre inteiro anunciando o Projeto Integrador I depois
+    que o projeto já era o II, e passou despercebida porque nada a olhava.
+    Como é texto duplicado em dois arquivos, o modo de errar é corrigir um e
+    esquecer o outro — então o teste compara os dois em vez de só procurar a
+    frase certa em cada um.
+    """
+
+    DISCIPLINA = 'Projeto Integrador em Computação II - DRP14 - Turma 001'
+
+    def setUp(self):
+        CustomUser.objects.create_user(username='operador', password='senha-de-teste')
+
+    def tarja(self, html):
+        achado = re.search(
+            r'<div class="disclaimer-univesp">(.*?)</div>', html, re.S,
+        )
+        self.assertIsNotNone(achado, 'página sem a tarja acadêmica')
+        return re.sub(r'\s+', ' ', achado.group(1)).strip()
+
+    def test_a_tarja_nomeia_a_disciplina_atual_nas_duas_areas(self):
+        publica = self.tarja(self.client.get(reverse('public:home')).content.decode())
+        self.client.login(username='operador', password='senha-de-teste')
+        interna = self.tarja(self.client.get(reverse('dashboard:index')).content.decode())
+
+        for area, texto in (('pública', publica), ('interna', interna)):
+            with self.subTest(area=area):
+                self.assertIn(self.DISCIPLINA, texto)
+
+        self.assertEqual(
+            publica, interna,
+            'as duas tarjas divergiram — corrigir uma sem a outra é o erro clássico aqui',
+        )
+
+    def test_a_tarja_avisa_que_os_dados_sao_simulados(self):
+        """O banco é semeado por populate_demo; o aviso é o que torna isso honesto."""
+        texto = self.tarja(self.client.get(reverse('public:home')).content.decode())
+        self.assertIn('FICTÍCIOS', texto)
