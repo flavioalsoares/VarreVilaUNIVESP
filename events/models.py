@@ -102,3 +102,55 @@ class InscricaoPublica(models.Model):
 
     def __str__(self):
         return f'{self.nome} → {self.event.titulo}'
+
+
+class SugestaoDeLocal(models.Model):
+    """
+    Local que precisa de mutirão, apontado por quem tem conta no sistema.
+
+    Quem mora no bairro enxerga o problema antes da coordenação: o terreno que
+    virou depósito de entulho, a praça onde o lixo volta toda semana. Até aqui
+    esse conhecimento chegava por fora do sistema — recado em grupo de
+    mensagens, conversa de corredor — e se perdia. Agora entra por uma porta
+    e fica registrado.
+    """
+
+    STATUS_CHOICES = [
+        ('nova', 'Nova'),
+        ('em_analise', 'Em análise'),
+        ('aceita', 'Aceita'),
+        ('recusada', 'Recusada'),
+    ]
+
+    local = models.CharField(max_length=200, verbose_name='Endereço')
+    bairro = models.CharField(max_length=100, verbose_name='Bairro')
+    ponto_de_referencia = models.CharField(
+        max_length=200, blank=True, verbose_name='Ponto de referência',
+    )
+    motivo = models.TextField(verbose_name='O que acontece no local')
+    sugerido_por = models.ForeignKey(
+        CustomUser, on_delete=models.SET_NULL, null=True,
+        related_name='sugestoes_de_local', verbose_name='Sugerido por',
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='nova')
+    resposta_da_equipe = models.TextField(blank=True, verbose_name='Resposta da equipe')
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-criado_em']
+        verbose_name = 'Sugestão de local'
+        verbose_name_plural = 'Sugestões de locais'
+
+    def save(self, *args, **kwargs):
+        # O endereço é comparado para barrar sugestão repetida da mesma
+        # pessoa; espaços sobrando fariam duas grafias do mesmo lugar.
+        self.local = self.local.strip()
+        self.bairro = self.bairro.strip()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.local} ({self.bairro})'
+
+    def esta_em_aberto(self):
+        return self.status in ('nova', 'em_analise')

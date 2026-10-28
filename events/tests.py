@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from users.models import CustomUser
 
-from .models import Event, InscricaoPublica, Participation
+from .models import Event, InscricaoPublica, Participation, SugestaoDeLocal
 
 
 def cria_evento(**campos):
@@ -413,3 +413,206 @@ class InscricaoPublicaNoAdminTest(TestCase):
         self.assertFalse(
             InscricaoPublica.objects.filter(pk=self.inscricao.pk).exists()
         )
+
+
+class SugestaoDeLocalTest(TestCase):
+    """
+    Sugerir um local é de quem tem conta; ler as sugestões é da equipe.
+
+    As duas metades da regra importam. Qualquer voluntário aponta um ponto que
+    precisa de mutirão, porque é ele que mora na rua; mas o que foi registrado
+    só aparece para a equipe administrativa — nem o site público, nem os
+    outros voluntários, nem quem escreveu a sugestão a vê de novo.
+    """
+
+    DADOS = {
+        'local': 'Rua das Acácias, 200',
+        'bairro': 'Ermelino Matarazzo',
+        'ponto_de_referencia': 'Ao lado da padaria',
+        'motivo': 'Entulho acumulado na esquina há três semanas.',
+    }
+
+    def setUp(self):
+        self.voluntario = CustomUser.objects.create_user(
+            username='vizinho', password='senha-de-teste', perfil='voluntario')
+        self.outro = CustomUser.objects.create_user(
+            username='outro', password='senha-de-teste', perfil='voluntario')
+        self.admin = CustomUser.objects.create_user(
+            username='coordenacao', password='senha-de-teste', perfil='admin')
+
+    def entra(self, usuario):
+        self.client.login(username=usuario.username, password='senha-de-teste')
+
+    # ─── Quem pode sugerir ──────────────────────────────────────────────
+
+    def test_visitante_sem_conta_nao_alcanca_o_formulario(self):
+        resposta = self.client.get(reverse('events:sugerir_local'))
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn(reverse('users:login'), resposta.url)
+
+    def test_voluntario_abre_o_formulario(self):
+        self.entra(self.voluntario)
+        resposta = self.client.get(reverse('events:sugerir_local'))
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, 'name="local"')
+        self.assertContains(resposta, 'name="motivo"')
+
+    def test_formulario_pede_endereco_e_nao_coordenada(self):
+        """Quem vê o problema na rua sabe o endereço, não a latitude."""
+        self.entra(self.voluntario)
+        html = self.client.get(reverse('events:sugerir_local')).content.decode()
+        self.assertNotIn('name="latitude"', html)
+        self.assertNotIn('name="longitude"', html)
+
+    def test_sugestao_grava_com_o_autor_e_status_inicial(self):
+        self.entra(self.voluntario)
+        resposta = self.client.post(reverse('events:sugerir_local'), self.DADOS)
+        self.assertEqual(resposta.status_code, 302)
+        sugestao = SugestaoDeLocal.objects.get()
+        self.assertEqual(sugestao.sugerido_por, self.voluntario)
+        self.assertEqual(sugestao.status, 'nova')
+        self.assertEqual(sugestao.local, 'Rua das Acácias, 200')
+
+    def test_a_confirmacao_e_uma_mensagem_e_nao_uma_lista(self):
+        """Depois de enviada, a sugestão pertence à equipe — nem o autor a revê."""
+        self.entra(self.voluntario)
+        resposta = self.client.post(reverse('events:sugerir_local'), self.DADOS, follow=True)
+        self.assertContains(resposta, 'Sugestão enviada')
+        self.assertNotContains(resposta, self.DADOS['motivo'])
+
+    def test_motivo_curto_demais_e_recusado(self):
+        self.entra(self.voluntario)
+        self.client.post(reverse('events:sugerir_local'), {**self.DADOS, 'motivo': 'tem lixo'})
+        self.assertEqual(SugestaoDeLocal.objects.count(), 0)
+
+    def test_mesma_pessoa_nao_sugere_o_mesmo_local_duas_vezes(self):
+        self.entra(self.voluntario)
+        self.client.post(reverse('events:sugerir_local'), self.DADOS)
+        self.client.post(reverse('events:sugerir_local'), self.DADOS)
+        self.assertEqual(SugestaoDeLocal.objects.count(), 1)
+
+    def test_outra_pessoa_pode_apontar_o_mesmo_local(self):
+        """Dois moradores reclamando do mesmo ponto é informação, não duplicata."""
+        self.entra(self.voluntario)
+        self.client.post(reverse('events:sugerir_local'), self.DADOS)
+        self.client.logout()
+        self.entra(self.outro)
+        self.client.post(reverse('events:sugerir_local'), self.DADOS)
+        self.assertEqual(SugestaoDeLocal.objects.count(), 2)
+
+    # ─── Quem pode ler ──────────────────────────────────────────────────
+
+    def cria_sugestao(self, **campos):
+        dados = {**self.DADOS, 'sugerido_por': self.voluntario}
+        dados.update(campos)
+        return SugestaoDeLocal.objects.create(**dados)
+
+    def test_voluntario_nao_alcanca_a_lista_de_sugestoes(self):
+        self.cria_sugestao()
+        self.entra(self.voluntario)
+        resposta = self.client.get(reverse('events:sugestoes'))
+        self.assertEqual(resposta.status_code, 302)
+        self.assertEqual(resposta.url, reverse('events:lista'))
+
+    def test_voluntario_nao_le_o_conteudo_nem_seguindo_o_redirecionamento(self):
+        sugestao = self.cria_sugestao()
+        self.entra(self.voluntario)
+        resposta = self.client.get(reverse('events:sugestoes'), follow=True)
+        self.assertNotContains(resposta, sugestao.motivo)
+        self.assertNotContains(resposta, sugestao.local)
+
+    def test_visitante_sem_conta_nao_alcanca_a_lista(self):
+        self.cria_sugestao()
+        resposta = self.client.get(reverse('events:sugestoes'))
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn(reverse('users:login'), resposta.url)
+
+    def test_equipe_administrativa_le_a_sugestao_de_outra_pessoa(self):
+        sugestao = self.cria_sugestao()
+        self.entra(self.admin)
+        resposta = self.client.get(reverse('events:sugestoes'))
+        self.assertEqual(resposta.status_code, 200)
+        self.assertContains(resposta, sugestao.local)
+        self.assertContains(resposta, sugestao.motivo)
+        self.assertContains(resposta, 'vizinho')
+
+    def test_filtro_por_andamento(self):
+        self.cria_sugestao(status='nova')
+        self.cria_sugestao(local='Outro ponto', status='aceita')
+        self.entra(self.admin)
+        resposta = self.client.get(reverse('events:sugestoes'), {'status': 'aceita'})
+        self.assertContains(resposta, 'Outro ponto')
+        self.assertNotContains(resposta, 'Rua das Acácias, 200')
+
+    # ─── Quem pode avaliar ──────────────────────────────────────────────
+
+    def test_equipe_muda_o_andamento_e_registra_a_resposta(self):
+        sugestao = self.cria_sugestao()
+        self.entra(self.admin)
+        self.client.post(reverse('events:avaliar_sugestao', args=[sugestao.pk]),
+                         {'status': 'aceita', 'resposta_da_equipe': 'Entrou no calendário.'})
+        sugestao.refresh_from_db()
+        self.assertEqual(sugestao.status, 'aceita')
+        self.assertEqual(sugestao.resposta_da_equipe, 'Entrou no calendário.')
+
+    def test_voluntario_nao_avalia(self):
+        sugestao = self.cria_sugestao()
+        self.entra(self.voluntario)
+        self.client.post(reverse('events:avaliar_sugestao', args=[sugestao.pk]),
+                         {'status': 'aceita'})
+        sugestao.refresh_from_db()
+        self.assertEqual(sugestao.status, 'nova')
+
+    def test_andamento_invalido_nao_passa(self):
+        sugestao = self.cria_sugestao()
+        self.entra(self.admin)
+        self.client.post(reverse('events:avaliar_sugestao', args=[sugestao.pk]),
+                         {'status': 'arquivada'})
+        sugestao.refresh_from_db()
+        self.assertEqual(sugestao.status, 'nova')
+
+    def test_avaliacao_nao_acontece_por_get(self):
+        """Mudança de estado por link seria vulnerável a clique de terceiro."""
+        sugestao = self.cria_sugestao()
+        self.entra(self.admin)
+        resposta = self.client.get(reverse('events:avaliar_sugestao', args=[sugestao.pk]),
+                                   {'status': 'aceita'})
+        self.assertEqual(resposta.status_code, 405)
+        sugestao.refresh_from_db()
+        self.assertEqual(sugestao.status, 'nova')
+
+    # ─── O que cada um vê na navegação ──────────────────────────────────
+
+    def test_todo_mundo_logado_ve_o_atalho_para_sugerir(self):
+        for usuario in (self.voluntario, self.admin):
+            with self.subTest(usuario=usuario.username):
+                self.client.logout()
+                self.entra(usuario)
+                html = self.client.get(reverse('dashboard:index')).content.decode()
+                self.assertIn(reverse('events:sugerir_local'), html)
+
+    def test_so_a_equipe_ve_o_atalho_para_a_lista(self):
+        self.entra(self.voluntario)
+        html = self.client.get(reverse('dashboard:index')).content.decode()
+        self.assertNotIn(reverse('events:sugestoes'), html)
+
+        self.client.logout()
+        self.entra(self.admin)
+        html = self.client.get(reverse('dashboard:index')).content.decode()
+        self.assertIn(reverse('events:sugestoes'), html)
+
+    def test_o_painel_avisa_a_equipe_quantas_sugestoes_esperam(self):
+        self.cria_sugestao()
+        self.cria_sugestao(local='Outro ponto', status='em_analise')
+        self.cria_sugestao(local='Ponto resolvido', status='aceita')
+        self.entra(self.admin)
+        resposta = self.client.get(reverse('dashboard:index'))
+        self.assertEqual(resposta.context['sugestoes_em_aberto'], 2)
+        self.assertContains(resposta, 'esperando avaliação')
+
+    def test_o_painel_do_voluntario_nao_conta_sugestao_alguma(self):
+        self.cria_sugestao()
+        self.entra(self.voluntario)
+        resposta = self.client.get(reverse('dashboard:index'))
+        self.assertEqual(resposta.context['sugestoes_em_aberto'], 0)
+        self.assertNotContains(resposta, 'esperando avaliação')

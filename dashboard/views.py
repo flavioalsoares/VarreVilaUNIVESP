@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncMonth
-from events.models import Event, Participation
+from events.models import Event, Participation, SugestaoDeLocal
 from impact.models import ImpactReport
 from users.models import CustomUser
 
@@ -56,7 +56,17 @@ def index(request):
         for e in eventos_mapa
     ]
 
+    # Sugestão esperando resposta é trabalho parado, e a equipe não vai
+    # procurar por ela: o número vem até o painel. Quem não é da equipe não vê
+    # nem a contagem.
+    sugestoes_em_aberto = 0
+    if request.user.is_admin_vv():
+        sugestoes_em_aberto = SugestaoDeLocal.objects.filter(
+            status__in=('nova', 'em_analise')
+        ).count()
+
     context = {
+        'sugestoes_em_aberto': sugestoes_em_aberto,
         'total_mutiroes': total_mutiroes,
         'total_voluntarios': total_voluntarios,
         'total_bairros': total_bairros,

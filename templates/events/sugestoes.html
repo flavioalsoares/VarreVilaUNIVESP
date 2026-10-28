@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Sugestões de locais – {{ INST_NOME }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+        <h2><i class="bi bi-geo-alt-fill"></i> Sugestões de locais</h2>
+        <p class="mb-0 opacity-75">
+            Apontadas por quem tem conta no sistema &mdash; visíveis só para a equipe administrativa
+        </p>
+    </div>
+    <span class="badge bg-light text-dark fs-6">{{ total_em_aberto }} em aberto</span>
+</div>
+
+<div class="card p-3 mb-3">
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'events:sugestoes' %}"
+           class="btn btn-sm {% if not status_filtro %}btn-success{% else %}btn-outline-success{% endif %}">
+            Todas
+        </a>
+        {% for valor, rotulo in status_disponiveis %}
+        <a href="?status={{ valor }}"
+           class="btn btn-sm {% if status_filtro == valor %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            {{ rotulo }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+{% if sugestoes %}
+<div class="row g-3">
+    {% for sugestao in sugestoes %}
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+                    <h5 class="card-title mb-0">{{ sugestao.local }}</h5>
+                    <span class="badge {% if sugestao.status == 'nova' %}bg-primary
+                        {% elif sugestao.status == 'em_analise' %}bg-warning text-dark
+                        {% elif sugestao.status == 'aceita' %}bg-success
+                        {% else %}bg-secondary{% endif %}">
+                        {{ sugestao.get_status_display }}
+                    </span>
+                </div>
+
+                <p class="text-muted small mb-2">
+                    <i class="bi bi-geo"></i> {{ sugestao.bairro }}
+                    {% if sugestao.ponto_de_referencia %}
+                    &middot; {{ sugestao.ponto_de_referencia }}
+                    {% endif %}
+                </p>
+
+                <p class="mb-3">{{ sugestao.motivo|linebreaksbr }}</p>
+
+                <p class="text-muted small mb-3">
+                    <i class="bi bi-person"></i>
+                    {% if sugestao.sugerido_por %}
+                        {{ sugestao.sugerido_por.get_full_name|default:sugestao.sugerido_por.username }}
+                    {% else %}
+                        conta removida
+                    {% endif %}
+                    &middot; {{ sugestao.criado_em|date:"d/m/Y H:i" }}
+                </p>
+
+                <form method="post" action="{% url 'events:avaliar_sugestao' sugestao.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold"
+                               for="status-{{ sugestao.pk }}">Andamento</label>
+                        <select class="form-select form-select-sm" name="status" id="status-{{ sugestao.pk }}">
+                            {% for valor, rotulo in status_disponiveis %}
+                            <option value="{{ valor }}" {% if sugestao.status == valor %}selected{% endif %}>
+                                {{ rotulo }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold"
+                               for="resposta-{{ sugestao.pk }}">Resposta da equipe</label>
+                        <textarea class="form-control form-control-sm" rows="2" name="resposta_da_equipe"
+                                  id="resposta-{{ sugestao.pk }}"
+                                  placeholder="Anotação interna sobre a decisão">{{ sugestao.resposta_da_equipe }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-success">
+                        <i class="bi bi-check2"></i> Salvar avaliação
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card p-4 text-center text-muted">
+    <p class="mb-0">
+        {% if status_filtro %}
+            Nenhuma sugestão com este andamento.
+        {% else %}
+            Nenhuma sugestão registrada ainda.
+        {% endif %}
+    </p>
+</div>
+{% endif %}
+{% endblock %}

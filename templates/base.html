@@ -216,13 +216,23 @@
                    href="{% url 'dashboard:index' %}">
                     <i class="bi bi-speedometer2"></i> Painel
                 </a>
-                <a class="nav-link {% if request.resolver_match.app_name == 'events' %}active{% endif %}"
+                <a class="nav-link {% if request.resolver_match.app_name == 'events' and 'suge' not in request.resolver_match.url_name %}active{% endif %}"
                    href="{% url 'events:lista' %}">
                     <i class="bi bi-calendar-event"></i> Mutirões
                 </a>
                 {% if user.is_admin_vv %}
                 <a class="nav-link" href="{% url 'events:criar' %}">
                     <i class="bi bi-plus-circle"></i> Novo Mutirão
+                </a>
+                {% endif %}
+                <a class="nav-link {% if request.resolver_match.url_name == 'sugerir_local' %}active{% endif %}"
+                   href="{% url 'events:sugerir_local' %}">
+                    <i class="bi bi-geo-alt"></i> Sugerir Local
+                </a>
+                {% if user.is_admin_vv %}
+                <a class="nav-link {% if request.resolver_match.url_name == 'sugestoes' %}active{% endif %}"
+                   href="{% url 'events:sugestoes' %}">
+                    <i class="bi bi-inbox"></i> Sugestões de Locais
                 </a>
                 {% endif %}
                 <a class="nav-link {% if request.resolver_match.app_name == 'impact' %}active{% endif %}"
