@@ -9,19 +9,60 @@
  * segundos, e frases curtas contornam isso. Também permite parar entre uma
  * frase e outra sem esperar a fala inteira.
  *
- * Quando o navegador não oferece a API, o controle some do painel em vez
- * de ficar um botão que não faz nada.
+ * Ter o objeto `speechSynthesis` não é o mesmo que poder falar, e foi isso que
+ * deixou o botão morto no Brave: ele remove as vozes remotas do Google e não
+ * conversa com o speech-dispatcher do sistema, então `getVoices()` devolve
+ * lista vazia e `speak()` termina em `synthesis-failed`. O Chrome no Linux tem
+ * as vozes do Google (todas remotas) e o Firefox usa o speech-dispatcher.
+ *
+ * Por isso o grupo nasce escondido na marcação e só aparece depois de
+ * confirmada ao menos uma voz: um botão visível que não produz som é pior do
+ * que controle nenhum. As vozes chegam de forma assíncrona, daí a espera.
  */
+
+/* Quem nunca vai ter voz também nunca dispara 'voiceschanged', então a espera
+   precisa de um limite. */
+const ESPERA_PELAS_VOZES = 3000;
+
+/* Tempo que a fala tem para começar antes de considerarmos que não vai sair.
+   Sem isso o painel poderia ficar dizendo "Lendo…" para sempre. */
+const ESPERA_PELA_FALA = 2500;
+
+const SEM_VOZ = 'Este navegador não conseguiu gerar a voz. '
+    + 'Experimente o Chrome ou o Firefox para ouvir a página.';
 
 const raiz = document.querySelector('[data-leitura]');
 const suportado = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 
-if (raiz && !suportado) {
-    raiz.hidden = true;
+if (raiz && suportado) {
+    esperaVozes().then((vozes) => {
+        if (vozes.length > 0) {
+            raiz.hidden = false;
+            iniciar(raiz);
+        }
+    });
 }
 
-if (raiz && suportado) {
-    iniciar(raiz);
+function esperaVozes() {
+    const sintetizador = window.speechSynthesis;
+    /* A primeira chamada também serve de gatilho: em alguns navegadores é ela
+       que faz a lista começar a carregar. */
+    if (sintetizador.getVoices().length > 0) {
+        return Promise.resolve(sintetizador.getVoices());
+    }
+    return new Promise((resolve) => {
+        let respondeu = false;
+        const responde = () => {
+            if (respondeu) {
+                return;
+            }
+            respondeu = true;
+            sintetizador.removeEventListener('voiceschanged', responde);
+            resolve(sintetizador.getVoices());
+        };
+        sintetizador.addEventListener('voiceschanged', responde);
+        setTimeout(responde, ESPERA_PELAS_VOZES);
+    });
 }
 
 function iniciar(raiz) {
@@ -32,8 +73,9 @@ function iniciar(raiz) {
 
     let vozEmPortugues = null;
     let lendo = false;
+    let vigilancia = null;
 
-    /* As vozes chegam de forma assíncrona em alguns navegadores. */
+    /* A lista pode mudar depois do primeiro carregamento. */
     function escolheVoz() {
         const vozes = sintetizador.getVoices();
         vozEmPortugues =
@@ -76,11 +118,23 @@ function iniciar(raiz) {
         }
     }
 
-    function parar() {
-        sintetizador.cancel();
+    function encerra(mensagem) {
+        clearTimeout(vigilancia);
         lendo = false;
         atualizaControles();
-        informa('Leitura interrompida.');
+        informa(mensagem);
+    }
+
+    function parar() {
+        sintetizador.cancel();
+        encerra('Leitura interrompida.');
+    }
+
+    function falhou(erro) {
+        sintetizador.cancel();
+        encerra(erro === 'synthesis-failed' || erro === 'synthesis-unavailable'
+            ? SEM_VOZ
+            : 'Não foi possível continuar a leitura.');
     }
 
     function ler() {
@@ -103,22 +157,27 @@ function iniciar(raiz) {
             if (vozEmPortugues) {
                 fala.voice = vozEmPortugues;
             }
+            if (indice === 0) {
+                fala.addEventListener('start', () => clearTimeout(vigilancia));
+            }
             if (indice === frases.length - 1) {
-                fala.addEventListener('end', () => {
-                    lendo = false;
-                    atualizaControles();
-                    informa('Leitura concluída.');
-                });
+                fala.addEventListener('end', () => encerra('Leitura concluída.'));
             }
             fala.addEventListener('error', (evento) => {
-                if (evento.error !== 'interrupted' && evento.error !== 'canceled') {
-                    lendo = false;
-                    atualizaControles();
-                    informa('Não foi possível continuar a leitura.');
+                if (evento.error !== 'interrupted' && evento.error !== 'canceled' && lendo) {
+                    falhou(evento.error);
                 }
             });
             sintetizador.speak(fala);
         });
+
+        /* Nem toda falha chega como evento de erro: se a fala não começar e
+           nada for dito, a falha é o silêncio. */
+        vigilancia = setTimeout(() => {
+            if (lendo && !sintetizador.speaking) {
+                falhou('synthesis-failed');
+            }
+        }, ESPERA_PELA_FALA);
     }
 
     botaoLer.addEventListener('click', ler);

@@ -414,6 +414,47 @@ class AcessibilidadeTest(TestCase):
             self.assertIn(atributo, self.html)
 
 
+class LeituraEmVozAltaTest(TestCase):
+    """
+    O grupo "Ouvir a página" é entregue escondido, e isso é proposital.
+
+    Ter `window.speechSynthesis` não garante que o navegador fale: o Brave
+    remove as vozes remotas do Google e não usa o speech-dispatcher do sistema,
+    então a lista de vozes vem vazia e `speak()` termina em `synthesis-failed`
+    — o botão ficava visível e silencioso. Quem revela o grupo é leitura.js,
+    depois de confirmar ao menos uma voz. Sem JavaScript, ou sem voz, o
+    controle simplesmente não aparece.
+    """
+
+    def setUp(self):
+        CustomUser.objects.create_user(username='operador', password='senha-de-teste')
+
+    def paginas(self):
+        yield 'home pública', self.client.get(reverse('public:home')).content.decode()
+        self.client.login(username='operador', password='senha-de-teste')
+        yield 'painel interno', self.client.get(reverse('dashboard:index')).content.decode()
+
+    def test_o_grupo_nasce_escondido_nas_duas_areas(self):
+        for pagina, html in self.paginas():
+            with self.subTest(pagina=pagina):
+                grupo = re.search(r'<fieldset[^>]*data-leitura[^>]*>', html)
+                self.assertIsNotNone(grupo, 'o grupo de leitura não foi entregue')
+                self.assertIn('hidden', grupo.group())
+
+    def test_o_botao_de_parar_tambem_nasce_escondido(self):
+        html = self.client.get(reverse('public:home')).content.decode()
+        botao = re.search(r'<button[^>]*data-leitura-acao="parar"[^>]*>', html)
+        self.assertIsNotNone(botao)
+        self.assertIn('hidden', botao.group())
+
+    def test_o_estado_da_leitura_e_anunciado(self):
+        """É por aqui que a falha de síntese chega a quem não vê a tela."""
+        html = self.client.get(reverse('public:home')).content.decode()
+        estado = re.search(r'<p[^>]*data-leitura-estado[^>]*>', html)
+        self.assertIsNotNone(estado)
+        self.assertIn('aria-live="polite"', estado.group())
+
+
 class AcessibilidadeNaAreaInternaTest(TestCase):
     """
     A mesma camada vale para quem opera o sistema, não só para quem visita.
