@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from events.models import Event, InscricaoPublica, Participation
+from events.models import Event, InscricaoPublica, Participation, SugestaoDeLocal
 from impact.models import ImpactReport
 from decimal import Decimal
 import datetime
@@ -558,5 +558,47 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(
             f'Inscrições pelo site: {InscricaoPublica.objects.count()}'
+        ))
+        # ─── Sugestões de locais ───────────────────────────────────────
+        # Vêm de voluntários, como na vida real: quem mora na rua vê o
+        # problema antes da coordenação. Uma de cada andamento para a tela da
+        # equipe mostrar os quatro estados sem ninguém precisar clicar.
+        SUGESTOES = [
+            ('Rua Pedro de Alcântara, altura do nº 400', 'Ermelino Matarazzo',
+             'Ao lado do ponto de ônibus',
+             'Terreno vazio virou ponto de descarte de entulho e sofá velho. '
+             'Piorou nos últimos dois meses e já atrai mosquito.',
+             'nova', ''),
+            ('Praça sem nome na Rua Ângelo Milano', 'Vila Curuçá',
+             'Atrás da UBS',
+             'A praça tem banco e brinquedo, mas o mato passou da cintura e o '
+             'lixo fica preso na vegetação. As crianças deixaram de usar.',
+             'em_analise', 'Verificar com a subprefeitura quem faz a poda antes de marcar data.'),
+            ('Viaduto da Estrada do Lajeado Velho', 'Lajeado',
+             'Embaixo da passagem, sentido centro',
+             'Sacola de lixo acumula embaixo do viaduto e espalha com a chuva. '
+             'Moradores já tentaram limpar sozinhos duas vezes.',
+             'aceita', 'Entrou no calendário — virou o Mutirão Lajeado.'),
+            ('Calçada da Avenida São Miguel, 7000', 'Vila Jacuí',
+             '',
+             'Calçada quebrada com areia e cascalho solto há muito tempo.',
+             'recusada', 'Caso de obra de calçada, não de mutirão de limpeza. '
+                         'Encaminhado para a subprefeitura.'),
+        ]
+
+        for indice, (local, bairro, referencia, motivo, status, resposta) in enumerate(SUGESTOES):
+            SugestaoDeLocal.objects.get_or_create(
+                local=local, bairro=bairro,
+                defaults={
+                    'ponto_de_referencia': referencia,
+                    'motivo': motivo,
+                    'status': status,
+                    'resposta_da_equipe': resposta,
+                    'sugerido_por': voluntarios[indice % len(voluntarios)],
+                },
+            )
+
+        self.stdout.write(self.style.SUCCESS(
+            f'Sugestões de locais: {SugestaoDeLocal.objects.count()}'
         ))
         self.stdout.write(self.style.SUCCESS('=== Dados de demonstração carregados com sucesso! ==='))

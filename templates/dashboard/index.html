@@ -41,6 +41,21 @@
     </div>
 </div>
 
+{% if user.is_admin_vv and sugestoes_em_aberto %}
+<div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2" role="alert">
+    <span>
+        <i class="bi bi-inbox"></i>
+        <strong>{{ sugestoes_em_aberto }}</strong>
+        {% if sugestoes_em_aberto == 1 %}
+            sugestão de local esperando avaliação da equipe.
+        {% else %}
+            sugestões de locais esperando avaliação da equipe.
+        {% endif %}
+    </span>
+    <a href="{% url 'events:sugestoes' %}" class="btn btn-sm btn-primary">Ver sugestões</a>
+</div>
+{% endif %}
+
 <div class="row g-3 mb-4">
     <!-- Gráfico mensal -->
     <div class="col-lg-7">
