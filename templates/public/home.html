@@ -7,11 +7,15 @@
 <style>
     /* ── HERO ── */
     .hero {
-        min-height: 100vh;
+        /* Era min-height: 100vh com o conteúdo centralizado na vertical. Como
+           a tarja acadêmica e o cabeçalho já consomem ~310px antes dele, a
+           centralização sobrava em 160 a 250px de vazio acima do título,
+           conforme a altura da janela, e empurrava o texto para a dobra. A
+           altura agora vem do conteúdo. */
         display: grid;
         grid-template-columns: 1fr 1fr;
         align-items: center;
-        padding: 0 5%;
+        padding: 56px 5% 80px;
         gap: 48px;
         position: relative;
         overflow: hidden;
@@ -405,7 +409,7 @@
 
     /* ── RESPONSIVE ── */
     @media (max-width: 900px) {
-        .hero { grid-template-columns: 1fr; padding-top: 120px; }
+        .hero { grid-template-columns: 1fr; padding-top: 40px; }
         .hero-visual { display: none; }
         .numeros-grid { grid-template-columns: repeat(2, 1fr); }
         .acoes-grid { grid-template-columns: 1fr; }
