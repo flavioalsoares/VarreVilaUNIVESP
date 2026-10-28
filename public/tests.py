@@ -416,14 +416,18 @@ class AcessibilidadeTest(TestCase):
 
 class LeituraEmVozAltaTest(TestCase):
     """
-    O grupo "Ouvir a página" é entregue escondido, e isso é proposital.
+    O grupo "Ouvir a página" é sempre entregue visível.
 
     Ter `window.speechSynthesis` não garante que o navegador fale: o Brave
-    remove as vozes remotas do Google e não usa o speech-dispatcher do sistema,
-    então a lista de vozes vem vazia e `speak()` termina em `synthesis-failed`
-    — o botão ficava visível e silencioso. Quem revela o grupo é leitura.js,
-    depois de confirmar ao menos uma voz. Sem JavaScript, ou sem voz, o
-    controle simplesmente não aparece.
+    remove as vozes remotas do Google e só usa o speech-dispatcher do sistema
+    quando aberto com `--enable-speech-dispatcher`, então a lista de vozes vem
+    vazia e `speak()` termina em `synthesis-failed`.
+
+    A primeira tentativa de correção escondeu o grupo nesse caso, e isso tirou
+    do painel uma função que existe — quem usa Chrome ou Firefox perdia o
+    controle de vista por causa de uma limitação de outro navegador, e quem usa
+    Brave deixou de saber que a função está lá. Agora o controle fica, e quem
+    não tem voz recebe a explicação na linha de dica, que é região viva.
     """
 
     def setUp(self):
@@ -434,12 +438,19 @@ class LeituraEmVozAltaTest(TestCase):
         self.client.login(username='operador', password='senha-de-teste')
         yield 'painel interno', self.client.get(reverse('dashboard:index')).content.decode()
 
-    def test_o_grupo_nasce_escondido_nas_duas_areas(self):
+    def test_o_grupo_e_entregue_visivel_nas_duas_areas(self):
         for pagina, html in self.paginas():
             with self.subTest(pagina=pagina):
                 grupo = re.search(r'<fieldset[^>]*data-leitura[^>]*>', html)
                 self.assertIsNotNone(grupo, 'o grupo de leitura não foi entregue')
-                self.assertIn('hidden', grupo.group())
+                self.assertNotIn('hidden', grupo.group())
+
+    def test_o_botao_de_ler_e_entregue_habilitado(self):
+        """Botão desabilitado sai da ordem de tabulação e some do leitor de tela."""
+        html = self.client.get(reverse('public:home')).content.decode()
+        botao = re.search(r'<button[^>]*data-leitura-acao="ler"[^>]*>', html)
+        self.assertIsNotNone(botao)
+        self.assertNotIn('disabled', botao.group())
 
     def test_o_botao_de_parar_tambem_nasce_escondido(self):
         html = self.client.get(reverse('public:home')).content.decode()

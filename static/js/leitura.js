@@ -10,14 +10,16 @@
  * frase e outra sem esperar a fala inteira.
  *
  * Ter o objeto `speechSynthesis` não é o mesmo que poder falar, e foi isso que
- * deixou o botão morto no Brave: ele remove as vozes remotas do Google e não
- * conversa com o speech-dispatcher do sistema, então `getVoices()` devolve
- * lista vazia e `speak()` termina em `synthesis-failed`. O Chrome no Linux tem
- * as vozes do Google (todas remotas) e o Firefox usa o speech-dispatcher.
+ * deixou o botão silencioso no Brave: ele remove as vozes remotas do Google e
+ * só conversa com o speech-dispatcher do sistema quando é aberto com
+ * `--enable-speech-dispatcher`, então `getVoices()` devolve lista vazia e
+ * `speak()` termina em `synthesis-failed`. O Chrome no Linux traz as vozes do
+ * Google (todas remotas) e o Firefox usa o speech-dispatcher direto.
  *
- * Por isso o grupo nasce escondido na marcação e só aparece depois de
- * confirmada ao menos uma voz: um botão visível que não produz som é pior do
- * que controle nenhum. As vozes chegam de forma assíncrona, daí a espera.
+ * O controle fica sempre visível. Quando não há voz, o módulo diz isso na
+ * linha de dica, que é região viva e portanto também chega a quem usa leitor
+ * de tela. Silêncio sem explicação era o defeito; esconder o botão seria
+ * outro, não a correção. As vozes chegam de forma assíncrona, daí a espera.
  */
 
 /* Quem nunca vai ter voz também nunca dispara 'voiceschanged', então a espera
@@ -28,19 +30,14 @@ const ESPERA_PELAS_VOZES = 3000;
    Sem isso o painel poderia ficar dizendo "Lendo…" para sempre. */
 const ESPERA_PELA_FALA = 2500;
 
-const SEM_VOZ = 'Este navegador não conseguiu gerar a voz. '
-    + 'Experimente o Chrome ou o Firefox para ouvir a página.';
+const SEM_VOZ = 'Nenhuma voz de leitura disponível neste navegador. '
+    + 'O Chrome e o Firefox leem a página.';
 
 const raiz = document.querySelector('[data-leitura]');
 const suportado = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 
 if (raiz && suportado) {
-    esperaVozes().then((vozes) => {
-        if (vozes.length > 0) {
-            raiz.hidden = false;
-            iniciar(raiz);
-        }
-    });
+    iniciar(raiz);
 }
 
 function esperaVozes() {
@@ -74,6 +71,7 @@ function iniciar(raiz) {
     let vozEmPortugues = null;
     let lendo = false;
     let vigilancia = null;
+    let temVoz = sintetizador.getVoices().length > 0;
 
     /* A lista pode mudar depois do primeiro carregamento. */
     function escolheVoz() {
@@ -85,6 +83,15 @@ function iniciar(raiz) {
     }
     escolheVoz();
     sintetizador.addEventListener('voiceschanged', escolheVoz);
+
+    /* Avisar antes do clique, e não depois: assim quem abre o painel já sabe
+       que deste navegador não vai sair som. */
+    esperaVozes().then((vozes) => {
+        temVoz = vozes.length > 0;
+        if (!temVoz) {
+            informa(SEM_VOZ);
+        }
+    });
 
     function textoParaLer() {
         const selecao = window.getSelection ? window.getSelection().toString().trim() : '';
@@ -138,6 +145,10 @@ function iniciar(raiz) {
     }
 
     function ler() {
+        if (!temVoz) {
+            informa(SEM_VOZ);
+            return;
+        }
         const { texto, origem } = textoParaLer();
         const frases = emFrases(texto);
         if (frases.length === 0) {
