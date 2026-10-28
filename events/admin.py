@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Event, InscricaoPublica, Participation
+from .models import Event, InscricaoPublica, Participation, SugestaoDeLocal
 
 
 class ParticipationInline(admin.TabularInline):
@@ -44,3 +44,19 @@ class InscricaoPublicaAdmin(admin.ModelAdmin):
     list_filter = ('presenca_confirmada', 'event')
     search_fields = ('nome', 'email', 'telefone')
     readonly_fields = ('criado_em',)
+
+
+@admin.register(SugestaoDeLocal)
+class SugestaoDeLocalAdmin(admin.ModelAdmin):
+    """
+    Sugestões de locais vindas de quem tem conta.
+
+    A tela do sistema já lista e avalia; o admin existe para o que ela não
+    faz: apagar um registro de teste, atender a um pedido de remoção e
+    procurar por endereço em uma base que cresce.
+    """
+
+    list_display = ('local', 'bairro', 'status', 'sugerido_por', 'criado_em')
+    list_filter = ('status', 'bairro')
+    search_fields = ('local', 'bairro', 'ponto_de_referencia', 'motivo')
+    readonly_fields = ('criado_em', 'atualizado_em')

@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
-from .models import Event, InscricaoPublica, Participation
-from .forms import EventForm
+from .models import Event, InscricaoPublica, Participation, SugestaoDeLocal
+from .forms import EventForm, SugestaoDeLocalForm
 
 
 @login_required
@@ -124,3 +124,71 @@ def confirmar_presenca_publica(request, pk, inscricao_id):
     inscricao.presenca_confirmada = not inscricao.presenca_confirmada
     inscricao.save()
     return redirect('events:detalhe', pk=pk)
+
+
+@login_required
+def sugerir_local(request):
+    """
+    Qualquer pessoa com conta aponta um local que precisa de mutirão.
+
+    Depois de enviada, a sugestão não volta para quem a escreveu: é a equipe
+    administrativa que a lê, avalia e responde. Por isso a confirmação é uma
+    mensagem, e não uma lista — ver a lista é privilégio de quem coordena.
+    """
+    if request.method == 'POST':
+        form = SugestaoDeLocalForm(request.POST, autor=request.user)
+        if form.is_valid():
+            sugestao = form.save(commit=False)
+            sugestao.sugerido_por = request.user
+            sugestao.save()
+            messages.success(
+                request,
+                'Sugestão enviada! A equipe do Varre Vila vai avaliar o local '
+                f'“{sugestao.local}” e considerá-lo nos próximos mutirões.'
+            )
+            return redirect('events:sugerir_local')
+    else:
+        form = SugestaoDeLocalForm(autor=request.user)
+    return render(request, 'events/sugerir_local.html', {'form': form})
+
+
+@login_required
+def sugestoes_de_local(request):
+    """Lista das sugestões — só para a equipe administrativa."""
+    if not request.user.is_admin_vv():
+        messages.error(request, 'Apenas a equipe administrativa vê as sugestões de locais.')
+        return redirect('events:lista')
+
+    status = request.GET.get('status', '')
+    sugestoes = SugestaoDeLocal.objects.select_related('sugerido_por')
+    if status:
+        sugestoes = sugestoes.filter(status=status)
+    return render(request, 'events/sugestoes.html', {
+        'sugestoes': sugestoes,
+        'status_filtro': status,
+        'status_disponiveis': SugestaoDeLocal.STATUS_CHOICES,
+        'total_em_aberto': SugestaoDeLocal.objects.filter(
+            status__in=('nova', 'em_analise')).count(),
+    })
+
+
+@login_required
+@require_POST
+def avaliar_sugestao(request, pk):
+    """Muda o andamento de uma sugestão e registra a resposta da equipe."""
+    if not request.user.is_admin_vv():
+        messages.error(request, 'Apenas a equipe administrativa avalia sugestões.')
+        return redirect('events:lista')
+
+    sugestao = get_object_or_404(SugestaoDeLocal, pk=pk)
+    status = request.POST.get('status', '')
+    if status not in dict(SugestaoDeLocal.STATUS_CHOICES):
+        messages.error(request, 'Andamento inválido.')
+        return redirect('events:sugestoes')
+
+    sugestao.status = status
+    sugestao.resposta_da_equipe = request.POST.get('resposta_da_equipe', '').strip()
+    sugestao.save()
+    messages.success(request, f'Sugestão de “{sugestao.local}” marcada como '
+                              f'{sugestao.get_status_display().lower()}.')
+    return redirect('events:sugestoes')
