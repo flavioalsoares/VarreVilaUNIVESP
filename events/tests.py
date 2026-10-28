@@ -514,6 +514,13 @@ class SugestaoDeLocalTest(TestCase):
         self.assertEqual(resposta.status_code, 302)
         self.assertEqual(resposta.url, reverse('events:lista'))
 
+    def test_o_redirecionamento_nao_anuncia_a_area_restrita(self):
+        """Chegar aqui exige digitar o endereço; avisar que existe entrega o que a tela esconde."""
+        self.cria_sugestao()
+        self.entra(self.voluntario)
+        resposta = self.client.get(reverse('events:sugestoes'), follow=True)
+        self.assertEqual(list(resposta.context['messages']), [])
+
     def test_voluntario_nao_le_o_conteudo_nem_seguindo_o_redirecionamento(self):
         sugestao = self.cria_sugestao()
         self.entra(self.voluntario)
