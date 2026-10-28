@@ -155,8 +155,10 @@ def sugerir_local(request):
 @login_required
 def sugestoes_de_local(request):
     """Lista das sugestões — só para a equipe administrativa."""
+    # Redireciona calado: quem não é da equipe chega aqui só digitando o
+    # endereço, e anunciar que existe uma área restrita é contar o que a tela
+    # justamente não deve mostrar.
     if not request.user.is_admin_vv():
-        messages.error(request, 'Apenas a equipe administrativa vê as sugestões de locais.')
         return redirect('events:lista')
 
     status = request.GET.get('status', '')
@@ -177,7 +179,6 @@ def sugestoes_de_local(request):
 def avaliar_sugestao(request, pk):
     """Muda o andamento de uma sugestão e registra a resposta da equipe."""
     if not request.user.is_admin_vv():
-        messages.error(request, 'Apenas a equipe administrativa avalia sugestões.')
         return redirect('events:lista')
 
     sugestao = get_object_or_404(SugestaoDeLocal, pk=pk)
