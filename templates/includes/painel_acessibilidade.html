@@ -58,9 +58,9 @@
             </div>
         </fieldset>
 
-        {# Nasce escondido: só aparece quando leitura.js confirma que o   #}
-        {# navegador tem alguma voz instalada. Brave não tem nenhuma.     #}
-        <fieldset class="acessibilidade-grupo" data-leitura hidden>
+        {# O controle fica sempre visível; quando o navegador não tem voz  #}
+        {# alguma, leitura.js explica na linha de dica em vez de calar.    #}
+        <fieldset class="acessibilidade-grupo" data-leitura>
             <legend>Ouvir a página</legend>
             <div class="acessibilidade-linha">
                 <button type="button" class="botao-preferencia" data-leitura-acao="ler">
